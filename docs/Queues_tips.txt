@@ -1,0 +1,10 @@
+// Testing Command And Production Command
+
+php artisan queue:work --queue=reportes --rest=3 --sleep=5 --max-jobs=30 --timeout=3600 --max-time=3600
+php artisan queue:listen --queue=reportes --rest=3 --sleep=5 --timeout=3600
+
+// Rationing Laravel's queue workers memory & CPU consumption
+https://themsaid.com/rationing-your-laravel-queue-workers-memory-and-cpu-consumption
+
+// DevOps With Laravel: Queues and Workers in Production
+https://martinjoo.dev/laravel-queues-and-workers-in-production

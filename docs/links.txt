@@ -1,0 +1,26 @@
+Redis:
+Install command WSL: wsl --install
+https://redis.io/docs/install/install-redis/install-redis-on-windows/
+open ubuntu terminal -> sudo service redis-server start
+
+Soketi:
+https://docs.soketi.app/
+https://github.com/soketi/soketi
+https://docs.soketi.app/getting-started/installation/cli-installation
+soketi start
+
+
+SOCKET.io TIPS:
+https://socket.io/docs/v4/reverse-proxy/
+
+
+PM2 & Apache2 Socket.io VirtualHost:
+https://vedmant.com/setup-node-js-production-application-apache-multiple-virtual-host-server/
+
+-- NOT USING IT
+Laravel Horizon:
+composer require laravel/horizon --ignore-platform-reqs
+** If you get con terminal -> Problem 1 - laravel/horizon v0.1.0 requires illuminate/contracts ~5.4 -> found...... -> -> -> next line
+** If you use Windows and get that issue - you should just ignore it since Horizon works fine without the extension and doesn't require it on Windows.
+** Linux: Cannot use laravel/horizon's latest version v5.14.2 as it requires ext-pcntl * which is missing from your platform. php-pcntl | php8-pcntl | ....
+** Also POSIX PHP extension

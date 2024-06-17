@@ -1,0 +1,26 @@
+includes:
+    - ./vendor/nunomaduro/larastan/extension.neon
+
+parameters:
+
+    checkModelProperties: false
+
+    paths:
+        - app/
+
+    # Level 9 is the highest level
+    level: 5
+
+    excludePaths:
+        - app/Http/Controllers/Test/*
+
+#    ignoreErrors:
+#        - '#PHPDoc tag @var#'
+#
+#    excludePaths:
+#        - ./*/*/FileToBeExcluded.php
+#
+#    checkMissingIterableValueType: false
+
+# Help Resources For Errors
+# https://laracasts.com/discuss/channels/general-discussion/php-stan-larastan-throwing-errors-access-to-an-undefined-property-in-models

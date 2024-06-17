@@ -1,0 +1,46 @@
+Tools
+https://www.mongodb.com/docs/database-tools/installation/installation-linux/
+
+// SAVE AND RESTORE DATABASE PHP
+$backUpCommand = "mongodump --archive='/tmp/mongodump-dev-db' --db=dev";
+shell_exec($backUpCommand);
+
+$restoreCommand = "mongorestore --archive='/tmp/mongodump-dev-db' --db=test --nsFrom='test.*' --nsTo='examples.*'";
+shell_exec($restoreCommand);
+
+// Maybe Useful Info
+In addition to the answer of Blakes Seven, if your databases use authentication I got this to work using the --uri option, which requires a recent mongo version (>3.4.6):
+mongodump --uri="mongodb://$sourceUser:$sourcePwd@$sourceHost/$sourceDb" --gzip --archive | mongorestore --uri="mongodb://$targetUser:$targetPwd@$targetHost/$targetDb" --nsFrom="$sourceDb.*" --nsTo="$targetDb.*" --gzip --archive
+Nowadays you also need to include --nsInclude="$targetDb.*" into the list of magic incantations of mongorestore
+
+// Info Restoring Databases (Restoring Different DB Name)
+https://www.designcise.com/web/tutorial/how-to-mongorestore-a-database-dump-to-a-different-database
+mongorestore --archive=/home/cesar/mongo_backup/garza_reyna --nsFrom "garza_reyna.*" --nsTo "prd_garza_reyna.*"
+
+// Restoring To Anothe DB NAME LINUX
+mongorestore --archive="/home/cesar/mongo_backup/garza_reyna" --nsFrom "garza_reyna.*" --nsTo "dev_garza_reyna.*"
+
+// Open Remote Connections To MongoDB Server
+https://www.digitalocean.com/community/tutorials/how-to-configure-remote-access-for-mongodb-on-ubuntu-20-04
+
+// Auth Restore DB (Pedira el password)
+mongorestore --username=<username> --authenticationDatabase=admin --archive=/home/developer/mongo_backup/garza_reyna garza_reyna
+
+// MongoDB Auth Enable
+https://www.mongodb.com/docs/manual/tutorial/configure-scram-client-authentication/
+
+
+
+
+
+// Mongosh Tips
+Grant your user the "root" role and you will be able to delete the dbs. You do NOT have to disable authentication to do this, as long as you have an admin account this will work.
+
+use admin;
+db.grantRolesToUser("adminUser", ["root"]);
+
+Now delete the database
+
+use databaseToDelete;
+db.dropDatabase();
+

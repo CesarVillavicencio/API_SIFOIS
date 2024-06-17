@@ -1,0 +1,129 @@
+// Bulma & Buefy SCSS
+@use "custom_buefy.scss"; // Fix for fontawesome 5 icons
+
+@import "@creativebulma/bulma-divider/dist/bulma-divider.css";
+@import "@creativebulma/bulma-tooltip/dist/bulma-tooltip.min.css";
+
+// Vue tiny slider
+@import "./tiny-slider/tiny-slider.scss";
+
+// Fix for vue fontawesome icons too large on inputs
+.icon.is-left svg,
+.icon.is-right svg,
+.button .icon svg,
+a .icon svg {
+    width: 1rem !important;
+    height: 1rem !important;
+}
+
+// Vue2-Animate
+$animationDuration: 0.2s; // specify animation duration. Default value: 1s
+@import "vue2-animate/src/sass/vue2-animate.scss";
+// @import "@asika32764/vue-animate/dist/vue-animate.css"; // https://github.com/asika32764/vue-animate
+
+/* Max Width to Element */
+.maxwidth {
+    width: 100%;
+}
+
+// Full Page Loader Until Apps Data Loaded
+.loader-wrapper {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 100%;
+    background: #fff;
+    opacity: 0;
+    z-index: -1;
+    transition: opacity 0.3s;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 6px;
+
+    .loader {
+        height: 80px;
+        width: 80px;
+    }
+
+    &.is-active {
+        opacity: 1;
+        z-index: 1;
+    }
+}
+
+// Full Height Cards
+.card.is-fullheight {
+    height: 100%;
+}
+
+// Nice Div Shadow
+.nice_shadow {
+    box-shadow: 0 4px 24px 0 rgba(34, 41, 47, 0.55);
+}
+
+// Clickeable Stuff
+.clickeable {
+    cursor: pointer;
+}
+
+// Gradient Background
+.default_gradient_background {
+    background: rgb(255, 255, 255);
+    background: linear-gradient(324deg, rgba(255, 255, 255, 1) 50%, rgba(224, 224, 224, 1) 100%);
+}
+
+div.controls-disabled {
+    pointer-events: none;
+    /* for "disabled" effect */
+    opacity: 0.5;
+}
+
+/* Word Break To Snackbar Large Text */
+div.snackbar .text {
+    overflow: hidden;
+    word-break: break-word;
+}
+
+/* *********************** */
+/* Glowing Focus Animation */
+/* *********************** */
+.glowing {
+    animation: glowing 1300ms infinite;
+}
+
+@keyframes glowing {
+    0% {
+        box-shadow: 0px 0px 15px 0px rgba(45, 255, 196, 0.9);
+    }
+
+    50% {
+        box-shadow: 0px 0px 15px 10px rgba(45, 255, 196, 0.9);
+    }
+
+    100% {
+        box-shadow: 0px 0px 15px 0px rgba(45, 255, 196, 0.9);
+    }
+}
+
+.glowingtext {
+    animation-name: glowingtext;
+    animation-duration: 0.5s;
+    animation-iteration-count: infinite;
+    animation-direction: alternate;
+}
+
+@keyframes glowingtext {
+    from {
+        text-shadow: 0px 0px 5px #42f569, 0px 0px 5px #614ad3;
+    }
+
+    to {
+        text-shadow: 0px 0px 20px #42f569, 0px 0px 10px #614ad3;
+    }
+}
+
+/* *********************** */
+/* Glowing Focus Animation */
+/* *********************** */

@@ -1,0 +1,6 @@
+
+// Running laravel scheduler on Linux
+open crontab -e in your server and paste below code and don't forget to change path-to-your-project like cd /var/www/testproject.
+
+* * * * * cd /path-to-your-project && php artisan schedule:run >> /dev/null 2>&1
+
