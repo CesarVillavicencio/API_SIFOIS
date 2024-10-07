@@ -19,6 +19,14 @@
 * Aplicación de Control de Embarque
     - vue, pinia, bulma, buefy, axios, dayjs, vue-fontawesome
 
+
+## FIRST STEP WHEN PUSHING CHANGES TO SOURCE -> Change Remote Git Repo
+**Remove Actual origin Repo Url**
+```
+git remote rm origin
+git remote add origin "your new origin repo url"
+```
+
 ### Pasos para instalar
 
 ```
