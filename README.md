@@ -38,6 +38,7 @@ cp .env.example .env
 php artisan key:generate  
 php artisan storage:link  
 php artisan migrate   
+php artisan db:seed --class=SepomexSeeder (Only if you use States and City From Mexico)
 ```
 
 ### Para compilar aplicaciones Web SPA en desarrollo local usar:
