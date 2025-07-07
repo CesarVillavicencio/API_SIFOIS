@@ -16,6 +16,7 @@ return new class extends Migration
         Schema::create('users', function (Blueprint $table) {
             $table->id();
             $table->string('name');
+            $table->string('lastname');
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
@@ -24,20 +25,20 @@ return new class extends Migration
             $table->timestamps();
         });
 
-        Schema::create('admin_users', function (Blueprint $table) {
-            $table->id();
-            $table->string('name');
-            $table->string('lastname');
-            $table->string('avatar')->nullable();
-            $table->string('email')->unique();
-            $table->string('password', 60);
-            $table->string('type');
-            $table->integer('new_notifications')->default(0);
-            $table->timestamp('blocked_at')->nullable();
-            $table->rememberToken();
-            $table->timestamps();
-            $table->softDeletes();
-        });
+        // Schema::create('admin_users', function (Blueprint $table) {
+        //     $table->id();
+        //     $table->string('name');
+        //     $table->string('lastname');
+        //     $table->string('avatar')->nullable();
+        //     $table->string('email')->unique();
+        //     $table->string('password', 60);
+        //     $table->string('type');
+        //     $table->integer('new_notifications')->default(0);
+        //     $table->timestamp('blocked_at')->nullable();
+        //     $table->rememberToken();
+        //     $table->timestamps();
+        //     $table->softDeletes();
+        // });
 
     }
 
@@ -48,7 +49,7 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('admin_users');
+        // Schema::dropIfExists('admin_users');
         Schema::dropIfExists('users');
     }
 };

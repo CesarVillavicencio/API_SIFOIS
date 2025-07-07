@@ -5,7 +5,7 @@ namespace App\Models\Sepomex;
 use Illuminate\Database\Eloquent\Model;
 
 class Entidad extends Model {
-    protected $table = 'entidad';
+    protected $table = 'entidades';
 
-    protected $fillable = ['name', 'abbrev', 'country'];
+    protected $fillable = ['name', 'abbrev', 'country', 'country'];
 }

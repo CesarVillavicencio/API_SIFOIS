@@ -8,27 +8,22 @@ return new class extends Migration
 {
     /**
      * Run the migrations.
-     *
-     * @return void
      */
-    public function up()
+    public function up(): void
     {
-        Schema::create('entidad', function (Blueprint $table) {
+        Schema::create('partidas', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
-            $table->string('abbrev');
-            $table->string('country');
+            $table->string('nombre');
+            $table->foreignId('padre_id')->nullable()->constrained('partidas'); // Self-referencing
             $table->timestamps();
         });
     }
 
     /**
      * Reverse the migrations.
-     *
-     * @return void
      */
-    public function down()
+    public function down(): void
     {
-        Schema::dropIfExists('entidad');
+        Schema::dropIfExists('partidas');
     }
 };

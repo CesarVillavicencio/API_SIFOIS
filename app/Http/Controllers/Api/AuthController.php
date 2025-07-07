@@ -108,4 +108,11 @@ class AuthController extends Controller
 
         return $data;
     }
+
+    protected function test(){
+        // dd('hola');
+        $users = User::all()->take(10);
+        return $users;
+        // dd($users);
+    }
 }

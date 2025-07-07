@@ -30,3 +30,6 @@ Route::middleware(['is.development'])->group(function () {
     Route::get('test', [TestController::class, 'test'])->name('test.test');
     // Route::get('testexcel', [TestController::class, 'testExcelExport'])->name('test.testexcel');
 });
+
+
+Route::get('webTest', [TestController::class, 'test'])->name('test');
