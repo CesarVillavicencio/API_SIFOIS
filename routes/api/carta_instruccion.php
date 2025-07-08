@@ -12,3 +12,6 @@ Route::post('deleteCarta',    [CartaInstruccionController::class, 'deleteCartaIn
 // getAllMonthsAverageByYear
 Route::get('getAllMonthsAverageByYear',     [CartaInstruccionController::class, 'getAllMonthsAverageByYear'])->name('getAllMonthsAverageByYear');
 Route::get('getAllMunicipuosAvarage',     [CartaInstruccionController::class, 'getAllMunicipuosAvarage'])->name('getAllMunicipuosAvarage');
+
+// Munucipios
+Route::get('getMunicipios',     [CartaInstruccionController::class, 'getMunicipios'])->name('getMunicipios');

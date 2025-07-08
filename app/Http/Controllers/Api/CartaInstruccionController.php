@@ -5,10 +5,16 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\CartaInstruccion;
+use App\Models\Sepomex\Municipio;
 use Carbon\Carbon;
 
 class CartaInstruccionController extends Controller
 {
+    public function getMunicipios(){
+        $municipios = Municipio::where('entidad_id',3)->get();
+        return $municipios;
+    }
+
     public function getCartas(){
         $ci = CartaInstruccion::with('beneficiario', 'partida.allPadres')->paginate(20);
         return $ci;
@@ -30,7 +36,9 @@ class CartaInstruccionController extends Controller
             'id_partida'        => $request->id_partida,
             'ci'                => $ci_id,
             'id_beneficiario'   => $request->id_beneficiario,
-            'tipo_cambio'       => $request->tipo_cambio,
+            'id_municipio'      => 20,
+            'tipo_cambio' => 20,
+            // 'tipo_cambio'       => $request->tipo_cambio,
             'importe'           => $request->importe,
             'concepto'          => $request->concepto,
             'observaciones'     => $request->observaciones,
