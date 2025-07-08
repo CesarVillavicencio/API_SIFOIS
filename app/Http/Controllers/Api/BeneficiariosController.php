@@ -24,6 +24,12 @@ class BeneficiariosController extends Controller
         return $beneficiarios;
     }
 
+    public function getAllSelect(){
+        $query = Beneficiario::query();
+        $beneficiarios = $query->orderBy('created_at','desc')->get();
+        return $beneficiarios;
+    }
+
     public function getBeneficiario(Request $request){
         $id = $request->id;
         $beneficiario = Beneficiario::findOrFail($id);

@@ -36,9 +36,9 @@ class CartaInstruccionController extends Controller
             'id_partida'        => $request->id_partida,
             'ci'                => $ci_id,
             'id_beneficiario'   => $request->id_beneficiario,
-            'id_municipio'      => 20,
-            'tipo_cambio' => 20,
-            // 'tipo_cambio'       => $request->tipo_cambio,
+            'id_municipio'      => $request->id_municipio,
+            'tipo_cambio'       => 20,//$request->tipo_cambio,
+            
             'importe'           => $request->importe,
             'concepto'          => $request->concepto,
             'observaciones'     => $request->observaciones,
@@ -53,6 +53,7 @@ class CartaInstruccionController extends Controller
         
         $ci->id_partida         = $request->id_partida;
         $ci->id_beneficiario    = $request->id_beneficiario;
+        $ci->id_municipio       = $request->id_municipio;
         $ci->tipo_cambio        = $request->tipo_cambio;
         $ci->importe            = $request->importe;
         $ci->concepto           = $request->concepto;
