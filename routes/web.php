@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\BeneficiariosController;
 use App\Http\Controllers\SiteController;
 use App\Http\Controllers\Test\TestController;
 use Illuminate\Support\Facades\Route;
@@ -33,3 +34,5 @@ Route::middleware(['is.development'])->group(function () {
 
 
 Route::get('webTest', [TestController::class, 'test'])->name('test');
+
+Route::get('pdfTest', [BeneficiariosController::class, 'getExcel'])->name('getExcel');

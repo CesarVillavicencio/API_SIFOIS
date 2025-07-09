@@ -11,3 +11,6 @@ Route::post('deleteBeneficiario', [BeneficiariosController::class, 'deleteBenefi
 
 // Para CI select *
 Route::get('getAllSelect',            [BeneficiariosController::class, 'getAllSelect'])->name('beneficiario.getAllSelect');
+
+// Excel
+Route::get('getExcel',            [BeneficiariosController::class, 'getExcel'])->name('beneficiario.getExcel');

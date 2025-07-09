@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Beneficiario;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\BeneficiariosExport;
 
 class BeneficiariosController extends Controller
 {
@@ -63,5 +65,10 @@ class BeneficiariosController extends Controller
         $beneficiario->delete();
         
         return $beneficiario;
+    }
+
+    public function getExcel(Request $request){
+        $results = Beneficiario::all();
+        return Excel::download(new BeneficiariosExport($results->toArray()), 'Beneficiarios.xlsx');
     }
 }
