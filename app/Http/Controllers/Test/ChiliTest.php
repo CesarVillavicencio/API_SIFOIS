@@ -15,17 +15,27 @@ class ChiliTest {
         ini_set('memory_limit', '-1');
         ini_set('max_execution_time', 0);
 
-        $partida = Partida::with('allPadres')->findOrFail(17);
+        $topBeneficiarios = CartaInstruccion::with('beneficiario')->select('id_beneficiario')
+            ->selectRaw('count(id_beneficiario) as qty')
+            ->groupBy('id_beneficiario')
+            ->orderBy('qty', 'DESC')
+            ->get()->take(10);
 
-        dd($partida);
-
+        $data = [];
+        $topBeneficiarios->each(function ($item, int $key) use(&$data) {
+            //dd($item);
+            $array['beneficiario'] = $item->beneficiario->nombre .' '.$item->beneficiario->apellido;
+            $array['total_cartas'] = $item->qty;
+            $array['total_importe'] = self::getTotal($item->id_beneficiario);
+            $data[] = $array;
+         });
+        
+         dd($data);
         return true;
 
         // $cartaArray=[];
         $cartas->each(function ($carta, $key) use (&$labels, &$data){
-            // $cartaArray[$key]['total'] = $carta->sum('importe');
-            // $cartaArray[$key]['count'] = count($carta);
-            // $cartaArray[$key]['items'] = $carta->toArray();
+           
             $labels[] = $key;
             $data[] = $carta->sum('importe'); 
         });
@@ -80,5 +90,10 @@ class ChiliTest {
         $id = count($cartas) + 1;
         dd($id);
         return true;
+    }
+
+    public static function getTotal($id){
+        $data = CartaInstruccion::where('id_beneficiario', $id)->get();
+        return $data->sum('importe');
     }
 }

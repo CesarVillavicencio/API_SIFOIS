@@ -62,12 +62,13 @@ class DashboardController extends Controller
     }
 
     public function getChartYearMonths(){
-        // $labels = [];
         $data = [];
 
         $cartas = CartaInstruccion::get()->groupBy(function($val) {
             return Carbon::parse($val->fecha)->format('Y');
         });
+
+       return $cartas;
 
         $cartas->each(function ($carta, $key) use (&$data){
             $meses = $carta->groupBy(function($val) {
@@ -81,9 +82,28 @@ class DashboardController extends Controller
             });
             
         });
+        
+        return response()->json($data);//$data;
+    }
 
-        return $data;
+    public function getTopBeneficiarios(){
+        $topBeneficiarios = CartaInstruccion::with('beneficiario')->select('id_beneficiario')
+            ->selectRaw('count(id_beneficiario) as qty')
+            ->groupBy('id_beneficiario')
+            ->orderBy('qty', 'DESC')
+            ->get()->take(10);
 
-
+        $data = [];
+        $topBeneficiarios->each(function ($item, int $key) use(&$data) {
+            //dd($item);
+            $array['beneficiario'] = $item->beneficiario->nombre .' '.$item->beneficiario->apellido;
+            $array['total_cartas'] = $item->qty;
+            $array['total_importe'] = this->getTotal($item->id_beneficiario);
+            $data[] = $array;
+         });
+    }
+    public function getTotal($id){
+        $data = CartaInstruccion::where('id_beneficiario', $id)->get();
+        return $data->sum('importe');
     }
 }
