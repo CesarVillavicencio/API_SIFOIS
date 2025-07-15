@@ -68,13 +68,12 @@ class DashboardController extends Controller
             return Carbon::parse($val->fecha)->format('Y');
         });
 
-       return $cartas;
-
         $cartas->each(function ($carta, $key) use (&$data){
             $meses = $carta->groupBy(function($val) {
                 return  Carbon::parse($val->fecha)->format('m');
                 // return Carbon::parse($val->fecha)->translatedFormat('F');
             });
+
             $meses_ordered = $meses->sortKeys();
             $meses_ordered->each(function ($mes, $key_2) use (&$data, $key){
                 $data[$key]['labels'][] = $key_2;
@@ -83,7 +82,7 @@ class DashboardController extends Controller
             
         });
         
-        return response()->json($data);//$data;
+        return $data;
     }
 
     public function getTopBeneficiarios(){
@@ -100,7 +99,9 @@ class DashboardController extends Controller
             $array['total_cartas'] = $item->qty;
             $array['total_importe'] = this->getTotal($item->id_beneficiario);
             $data[] = $array;
-         });
+        });
+        
+        return $data;
     }
     public function getTotal($id){
         $data = CartaInstruccion::where('id_beneficiario', $id)->get();

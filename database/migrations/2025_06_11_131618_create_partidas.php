@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('nombre');
             $table->foreignId('padre_id')->nullable()->constrained('partidas'); // Self-referencing
+            $table->decimal('presupuesto',9,2)->nullable();
             $table->timestamps();
         });
     }

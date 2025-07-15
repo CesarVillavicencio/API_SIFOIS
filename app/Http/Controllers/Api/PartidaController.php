@@ -27,6 +27,7 @@ class PartidaController extends Controller
         $partida = Partida::create([
             'nombre' => $request->nombre,
             'padre_id' => $request->padre_id,
+            'presupuesto' => $request->presupuesto
         ]);
 
         return $partida;
@@ -34,8 +35,9 @@ class PartidaController extends Controller
 
     public function updatePartida(Request $request){
         $partida = Partida::findOrFail($request->id);
-        $partida->nombre   = $request->nombre;
-        $partida->padre_id = $request->padre_id;
+        $partida->nombre        = $request->nombre;
+        $partida->padre_id      = $request->padre_id;
+        $partida->presupuesto   = $request->presupuesto;
         $partida->save();
         
         return $partida;
