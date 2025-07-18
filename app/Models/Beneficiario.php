@@ -11,5 +11,5 @@ class Beneficiario extends Model
     use HasFactory, SoftDeletes;
     
     protected $table = 'beneficiarios';
-    protected $fillable = ['nombre', 'apellido'];
+    protected $fillable = ['nombre', 'apellido', 'creado_por', 'actualizado_por'];
 }

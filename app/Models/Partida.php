@@ -10,7 +10,7 @@ class Partida extends Model
     use HasFactory;
     
     protected $table = 'partidas';
-    protected $fillable = ['nombre', 'padre_id'];
+    protected $fillable = ['nombre', 'padre_id', 'creado_por', 'actualizado_por'];
 
     // An partidas belongs to a partidas (who is also an partidas)
     public function padres()
@@ -41,5 +41,47 @@ class Partida extends Model
             $parent = $parent->padres;
         }
         return $parents;
+    }
+
+    public function ultimoPadre()
+    {
+        $partida = $this;
+        while ($partida->padre) {
+            $partida = $partida->padre;
+        }
+        return $partida;
+    }
+
+    public function ultimoPadreRelationship()
+    {
+        if ($this->relationLoaded('padre')) {
+            $padre = $this->getRelation('padre');
+        } else {
+            $padre = $this->padre;
+        }
+
+        $current = $this;
+        while ($current->padre) {
+            $current = $current->padre;
+        }
+
+        // Guardar manualmente como relación cargada
+        $this->setRelation('ultimoPadre', $current);
+
+        // Simular una relación válida
+        return $this->hasOne(Partida::class, 'id', 'id')->where('id', $current->id);
+    }
+
+    public function obtenerJerarquiaPadres()
+    {
+        $jerarquia = [];
+        $actual = $this;
+
+        while ($actual->padres) {
+            $actual = $actual->padres;
+            $jerarquia[] = $actual->nombre;
+        }
+
+        return array_reverse($jerarquia); // Desde el más lejano al inmediato
     }
 }

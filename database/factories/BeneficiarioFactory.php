@@ -22,6 +22,7 @@ class BeneficiarioFactory extends Factory {
         return [
             'nombre' => $this->faker->name,
             'apellido' => $this->faker->lastname,
+            'creado_por' => 'CVILLAVICENCIO'
         ];
     }
 

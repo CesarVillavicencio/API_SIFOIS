@@ -31,6 +31,10 @@ return new class extends Migration
             $table->text('concepto');
             $table->text('observaciones');
             $table->date('fecha');
+
+            $table->string('creado_por');
+            $table->string('actualizado_por')->nullable();
+
             $table->timestamps();
             $table->softDeletes();
         });

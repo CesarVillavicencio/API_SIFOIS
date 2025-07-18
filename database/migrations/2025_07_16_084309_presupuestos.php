@@ -11,14 +11,19 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('partidas', function (Blueprint $table) {
+        Schema::create('presupuestos', function (Blueprint $table) {
             $table->id();
-            $table->string('nombre');
-            $table->foreignId('padre_id')->nullable()->constrained('partidas'); // Self-referencing
-            // $table->decimal('presupuesto',9,2)->nullable();
+
+            $table->string('periodo');
+            $table->string('year');
+            
+            $table->json('id_municipio');
+            
             $table->string('creado_por');
             $table->string('actualizado_por')->nullable();
+
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 
@@ -27,6 +32,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('partidas');
+        Schema::dropIfExists('carta_instruccion');
     }
 };

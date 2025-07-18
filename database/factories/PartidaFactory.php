@@ -24,6 +24,7 @@ class PartidaFactory extends Factory {
            
             'nombre' => $nombre,
             'padre_id' => $this->addPadreId($nombre),
+            'creado_por' => 'CVILLAVICENCIO'
         ];
     }
 

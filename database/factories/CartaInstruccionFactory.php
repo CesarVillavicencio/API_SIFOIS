@@ -34,7 +34,8 @@ class CartaInstruccionFactory extends Factory {
             'importe' => $this->faker->randomFloat(2, 500000, 1000000),
             'concepto' => $this->faker->text(),
             'observaciones' => $this->faker->text(),
-            'fecha' =>  $fecha
+            'fecha' =>  $fecha,
+            'creado_por' => 'CVILLAVICENCIO'
 
         ];
     }

@@ -9,7 +9,7 @@ use App\Models\Partida;
 class PartidaController extends Controller
 {
     public function getPartidas(){
-        $partidas = Partida::whereNull('padre_id')->get();
+        $partidas = Partida::whereNull('padre_id')->orderBy('created_at','desc')->get();
         return $partidas;
     }
 
@@ -27,7 +27,7 @@ class PartidaController extends Controller
         $partida = Partida::create([
             'nombre' => $request->nombre,
             'padre_id' => $request->padre_id,
-            'presupuesto' => $request->presupuesto
+            'creado_por'  => $request->creado_por
         ]);
 
         return $partida;
@@ -35,9 +35,9 @@ class PartidaController extends Controller
 
     public function updatePartida(Request $request){
         $partida = Partida::findOrFail($request->id);
-        $partida->nombre        = $request->nombre;
-        $partida->padre_id      = $request->padre_id;
-        $partida->presupuesto   = $request->presupuesto;
+        $partida->nombre            = $request->nombre;
+        $partida->padre_id          = $request->padre_id;
+        $partida->actualizado_por   = $request->actualizado_por;
         $partida->save();
         
         return $partida;

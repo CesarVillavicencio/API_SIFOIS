@@ -21,7 +21,7 @@ class BeneficiariosController extends Controller
             $b->where('nombre', 'LIKE', '%'.$request->busqueda .'%')->orWhere('apellido','LIKE' , '%'.$request->busqueda .'%');
         });
 
-        $beneficiarios = $query->orderBy('created_at','desc')->paginate(10);
+        $beneficiarios = $query->orderBy('id','desc')->paginate(10);
 
         return $beneficiarios;
     }
@@ -40,8 +40,9 @@ class BeneficiariosController extends Controller
 
     public function createBeneficiario(Request $request){
         $beneficiario = Beneficiario::create([
-            'nombre'   => $request->nombre,
-            'apellido' => $request->apellido
+            'nombre'        => $request->nombre,
+            'apellido'      => $request->apellido,
+            'creado_por'    => $request->creado_por
         ]);
 
         return $beneficiario;
@@ -51,8 +52,9 @@ class BeneficiariosController extends Controller
         $id = $request->id;
         // return $request->apellido;
         $beneficiario = Beneficiario::findOrFail($id);
-        $beneficiario->nombre = $request->nombre;
-        $beneficiario->apellido = $request->apellido;
+        $beneficiario->nombre           = $request->nombre;
+        $beneficiario->apellido         = $request->apellido;
+        $beneficiario->actualizado_por  = $request->actualizado_por;
         $beneficiario->save();
 
         return $beneficiario;
