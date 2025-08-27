@@ -28,7 +28,6 @@ class CartaInstruccionFactory extends Factory {
             'ci' => 1,
             'id_beneficiario' => $this->faker->numberBetween(1, 100),
             'id_municipio' => $this->faker->randomElement([17,18,19,20,21]),
-            'estatus' =>  $this->faker->randomElement(['aprobado','modificado', 'comprometido', 'devengado', 'ejercido', 'pagado']),
             'tipo_cambio' => '20',
             // 'importe' => $this->faker->numberBetween($min = 500000.00, $max = 1000000.99),
             'importe' => $this->faker->randomFloat(2, 500000, 1000000),

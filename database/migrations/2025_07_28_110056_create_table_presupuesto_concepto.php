@@ -11,19 +11,16 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('presupuesto_partidas', function (Blueprint $table) {
-            $table->id();   
+        Schema::create('presupuesto_concepto', function (Blueprint $table) {
+            $table->id();
 
             $table->unsignedBigInteger('id_presupuesto');
             $table->foreign('id_presupuesto')->references('id')->on('presupuestos');
 
-            $table->unsignedBigInteger('id_partida');
-            $table->foreign('id_partida')->references('id')->on('partidas');
-            
-            $table->decimal('presupuesto',11,2);
-            
+            $table->string('concepto');
+
+            $table->decimal('importe',11,2);
             $table->timestamps();
-            $table->softDeletes();
         });
     }
 
@@ -32,6 +29,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('presupuesto_partidas');
+        Schema::dropIfExists('presupuesto_concepto');
     }
 };

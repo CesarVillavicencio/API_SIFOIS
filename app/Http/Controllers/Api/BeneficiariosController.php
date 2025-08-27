@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Models\Beneficiario;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\BeneficiariosExport;
+use App\Models\Bitacora;
 
 class BeneficiariosController extends Controller
 {
@@ -45,6 +46,12 @@ class BeneficiariosController extends Controller
             'creado_por'    => $request->creado_por
         ]);
 
+        // Bitacora
+        $bitacora = new Bitacora();
+        $bitacora->usuario = $request->creado_por;
+        $bitacora->descripcion = 'Se creo el beneficiario '.$request->nombre.' '.$request->apellido;
+        $beneficiario->bitacora()->save($bitacora);
+    
         return $beneficiario;
     }
 
@@ -52,10 +59,21 @@ class BeneficiariosController extends Controller
         $id = $request->id;
         // return $request->apellido;
         $beneficiario = Beneficiario::findOrFail($id);
+
+        $oldName = $beneficiario->nombre;
+        $oldApellido = $beneficiario->apellido;
+
         $beneficiario->nombre           = $request->nombre;
         $beneficiario->apellido         = $request->apellido;
         $beneficiario->actualizado_por  = $request->actualizado_por;
         $beneficiario->save();
+
+         // Bitacora
+        $bitacora = new Bitacora();
+        $bitacora->usuario = $request->actualizado_por;
+        $bitacora->morphable_id = $beneficiario->id;
+        $bitacora->descripcion = 'Se actualizo el beneficiario con nombre: '.$oldName.' '.$oldApellido .' a ' .$beneficiario->nombre .' '.$beneficiario->apellido;
+        $beneficiario->bitacora()->save($bitacora);
 
         return $beneficiario;
     }

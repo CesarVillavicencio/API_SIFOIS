@@ -12,18 +12,21 @@ use Maatwebsite\Excel\Concerns\WithEvents;
 use Maatwebsite\Excel\Concerns\WithStyles;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
+use Maatwebsite\Excel\Concerns\WithTitle;
 
-class PresupuestoExport implements FromArray, WithEvents, ShouldAutoSize
+class PresupuestoExport implements FromArray, WithEvents, ShouldAutoSize, WithTitle
 {   
 
     protected $data;
     protected $municipios_name;
+    protected $filasConNivel;
     
     public function __construct(array $data, string $municipios_name)
     {
         // dd($beneficiarios);
         $this->data = $data;
         $this->municipios_name = $municipios_name;
+        $this->filasConNivel = [];
     }
 
     // /**
@@ -51,6 +54,11 @@ class PresupuestoExport implements FromArray, WithEvents, ShouldAutoSize
         $this->recorrerJerarquia($this->data, 2, $rows);
         return $rows;
         
+    }
+
+    public function title(): string
+    {
+        return 'Presupuesto'; // This will be the sheet name
     }
 
     public function registerEvents(): array

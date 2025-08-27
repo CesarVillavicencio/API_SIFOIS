@@ -43,6 +43,8 @@ class CartaInstruccionController extends Controller
             'concepto'          => $request->concepto,
             'observaciones'     => $request->observaciones,
             'fecha'             => $request->fecha,
+            'creado_por'        =>$request->creado_por,
+            'actualizado_por'   =>$request->actualizado_por,
         ]);
 
         return $ci;

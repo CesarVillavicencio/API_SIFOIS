@@ -30,6 +30,8 @@ Route::name('carta_instruccion.')->prefix('carta_instruccion')->group(__DIR__.'/
 Route::name('beneficiario.')->prefix('beneficiario')->group(__DIR__.'/api/beneficiario.php');
 Route::name('dashboard.')->prefix('dashboard')->group(__DIR__.'/api/dashboard.php');
 Route::name('presupuesto.')->prefix('presupuesto')->group(__DIR__.'/api/presupuesto.php');
+Route::name('presupuesto_partida.')->prefix('presupuesto_partida')->group(__DIR__.'/api/presupuesto_partida.php');
+Route::name('bitacora.')->prefix('bitacora')->group(__DIR__.'/api/bitacora.php');
 
 // **********************************
 // Onlye Developing Testing Routes **

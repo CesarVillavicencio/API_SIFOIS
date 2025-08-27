@@ -76,12 +76,19 @@ class Partida extends Model
     {
         $jerarquia = [];
         $actual = $this;
-
         while ($actual->padres) {
+            // dd($actual);
             $actual = $actual->padres;
             $jerarquia[] = $actual->nombre;
         }
 
         return array_reverse($jerarquia); // Desde el más lejano al inmediato
     }
+
+    public function bitacora()
+    {
+        return $this->morphMany(Bitacora::class, 'morphable');
+    }
+
+
 }

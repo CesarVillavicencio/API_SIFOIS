@@ -9,7 +9,7 @@ use App\Models\Partida;
 class PartidaController extends Controller
 {
     public function getPartidas(){
-        $partidas = Partida::whereNull('padre_id')->orderBy('created_at','desc')->get();
+        $partidas = Partida::whereNull('padre_id')->orderBy('id','asc')->get();
         return $partidas;
     }
 

@@ -19,9 +19,12 @@ return new class extends Migration
             
             $table->json('id_municipio');
             
+            $table->string('estatus')->default('aprobado');
+            
             $table->string('creado_por');
             $table->string('actualizado_por')->nullable();
 
+            $table->string('serie')->nullable();
             $table->timestamps();
             $table->softDeletes();
         });

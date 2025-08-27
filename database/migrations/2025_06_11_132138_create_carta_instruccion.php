@@ -25,9 +25,9 @@ return new class extends Migration
             $table->unsignedBigInteger('id_municipio');
             $table->foreign('id_municipio')->references('id')->on('municipios');
 
-            $table->string('estatus')->default('aprobado');
+            
             $table->string('tipo_cambio');
-            $table->decimal('importe',9,2);
+            $table->decimal('importe',11,2);
             $table->text('concepto');
             $table->text('observaciones');
             $table->date('fecha');

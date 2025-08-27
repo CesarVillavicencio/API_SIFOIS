@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\CartaInstruccionController;
+use Illuminate\Support\Facades\Route;
 
 // Users
 Route::get('getAll',          [CartaInstruccionController::class, 'getCartas'])->name('getCartas');

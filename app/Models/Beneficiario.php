@@ -12,4 +12,10 @@ class Beneficiario extends Model
     
     protected $table = 'beneficiarios';
     protected $fillable = ['nombre', 'apellido', 'creado_por', 'actualizado_por'];
+
+
+    public function bitacora()
+    {
+        return $this->morphMany(Bitacora::class, 'morphable');
+    }
 }

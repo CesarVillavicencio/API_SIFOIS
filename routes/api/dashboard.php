@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\DashboardController;
+use Illuminate\Support\Facades\Route;
 
 // Users
 Route::get('getChartData',          [DashboardController::class, 'getChartData'])->name('getChartData');

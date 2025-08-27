@@ -12,7 +12,7 @@ class CartaInstruccion extends Model
     use HasFactory, SoftDeletes;
     
     protected $table = 'carta_instruccion';
-    protected $fillable = ['id_partida', 'ci', 'id_beneficiario', 'id_municipio', 'tipo_cambio', 'importe', 'concepto', 'observaciones', 'fecha'];
+    protected $fillable = ['id_partida', 'ci', 'id_beneficiario', 'id_municipio', 'tipo_cambio', 'importe', 'concepto', 'observaciones', 'fecha', 'creado_por', 'actualizado_por'];
 
     public function partida()
     {
