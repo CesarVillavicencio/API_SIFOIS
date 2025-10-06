@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Models\Beneficiario;
 use App\Models\CartaInstruccion;
 use App\Models\Partida;
+use App\Models\PresupuestoCI;
 use Carbon\Carbon;
 
 class DashboardController extends Controller
@@ -17,7 +18,7 @@ class DashboardController extends Controller
 
         $year = $request->year;
 
-        $cartas = CartaInstruccion::whereYear('fecha', $year)
+        $cartas = PresupuestoCI::whereYear('fecha', $year)
         ->orderBy('fecha','asc')->get()
         ->groupBy(function($val) {
             return Carbon::parse($val->fecha)->translatedFormat('F');
@@ -42,10 +43,10 @@ class DashboardController extends Controller
 
         $year = $request->year;
 
-        $cartas = CartaInstruccion::with('municipio')->whereYear('fecha', $year)
+        $cartas = PresupuestoCI::with('municipio')->whereYear('fecha', $year)
         ->orderBy('fecha','asc')->get()
         ->groupBy(function($val) {
-             return $val->municipio->name;
+            return $val->municipio->name ?? 'nohay';
         });
 
         // $cartaArray=[];
@@ -64,7 +65,7 @@ class DashboardController extends Controller
     public function getChartYearMonths(){
         $data = [];
 
-        $cartas = CartaInstruccion::get()->groupBy(function($val) {
+        $cartas = PresupuestoCI::get()->groupBy(function($val) {
             return Carbon::parse($val->fecha)->format('Y');
         });
 
@@ -86,7 +87,7 @@ class DashboardController extends Controller
     }
 
     public function getTopBeneficiarios(){
-        $topBeneficiarios = CartaInstruccion::with('beneficiario')->select('id_beneficiario')
+        $topBeneficiarios = PresupuestoCI::with('beneficiario')->select('id_beneficiario')
             ->selectRaw('count(id_beneficiario) as qty')
             ->groupBy('id_beneficiario')
             ->orderBy('qty', 'DESC')
@@ -97,14 +98,14 @@ class DashboardController extends Controller
             //dd($item);
             $array['beneficiario'] = $item->beneficiario->nombre .' '.$item->beneficiario->apellido;
             $array['total_cartas'] = $item->qty;
-            $array['total_importe'] = this->getTotal($item->id_beneficiario);
+            $array['total_importe'] = $this->getTotal($item->id_beneficiario);
             $data[] = $array;
         });
         
         return $data;
     }
     public function getTotal($id){
-        $data = CartaInstruccion::where('id_beneficiario', $id)->get();
+        $data = PresupuestoCI::where('id_beneficiario', $id)->get();
         return $data->sum('importe');
     }
 }

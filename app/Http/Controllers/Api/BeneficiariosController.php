@@ -13,13 +13,13 @@ class BeneficiariosController extends Controller
 {
     public function getAll(Request $request){
         if($request->has('busqueda')) {
-            //return 'si';
+            
         }
         $query = Beneficiario::query();
 
         $query->when($request->busqueda != null, function($b) use ($request){
-            
-            $b->where('nombre', 'LIKE', '%'.$request->busqueda .'%')->orWhere('apellido','LIKE' , '%'.$request->busqueda .'%');
+            // PostgreSQL's LIKE operator is case-sensitive by default. To perform a case-insensitive search, use the ILIKE operator.
+            $b->where('nombre', 'ILIKE', '%'.$request->busqueda .'%')->orWhere('apellido','ILIKE' , '%'.$request->busqueda .'%');
         });
 
         $beneficiarios = $query->orderBy('id','desc')->paginate(10);

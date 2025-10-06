@@ -15,12 +15,13 @@ return new class extends Migration
             $table->id();
 
             $table->unsignedBigInteger('id_presupuesto');
-            $table->foreign('id_presupuesto')->references('id')->on('presupuestos');
+            $table->foreign('id_presupuesto')->references('id')->on('presupuestos')->cascadeOnDelete();
 
             $table->string('concepto');
 
             $table->decimal('importe',11,2);
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 

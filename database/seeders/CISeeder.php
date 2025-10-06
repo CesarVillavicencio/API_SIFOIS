@@ -21,19 +21,19 @@ class CISeeder extends Seeder {
             PartidasSeeder::class,
         ]);
 
-        $cartas = CartaInstruccion::factory(1000)->create();
+        // $cartas = CartaInstruccion::factory(1000)->create();
 
-        foreach ($cartas as $carta) {
-            $year = Carbon::parse($carta->fecha)->format('Y');
+        // foreach ($cartas as $carta) {
+        //     $year = Carbon::parse($carta->fecha)->format('Y');
 
-            if (!isset($carta_year[$year])) {
-                $carta_year[$year] = 1;
-            } else {
-                $carta_year[$year]++;
-            }
+        //     if (!isset($carta_year[$year])) {
+        //         $carta_year[$year] = 1;
+        //     } else {
+        //         $carta_year[$year]++;
+        //     }
 
-            $carta->ci = $carta_year[$year];
-            $carta->save();
-        }
+        //     $carta->ci = $carta_year[$year];
+        //     $carta->save();
+        // }
     }
 }

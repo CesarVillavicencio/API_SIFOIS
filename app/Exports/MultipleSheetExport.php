@@ -3,6 +3,7 @@ namespace App\Exports;
 use Maatwebsite\Excel\Concerns\Exportable;
 use Maatwebsite\Excel\Concerns\WithMultipleSheets;
 use App\Exports\PresupuestoExport;
+use App\Exports\CIExport;
 use App\Models\PresupuestoCI;
 use App\Models\PresupuestoConcepto;
 use App\Models\PresupuestoPartida;
@@ -13,11 +14,11 @@ class MultipleSheetExport implements WithMultipleSheets
 {
     use Exportable;
 
-    protected $articulos;
+    protected $id;
     
-    public function __construct()
+    public function __construct($id)
     {
-        // $this->articulos = $articulos;
+        $this->id = $id;
     }
 
     /**
@@ -25,16 +26,17 @@ class MultipleSheetExport implements WithMultipleSheets
      */
     public function sheets(): array
     {
-        $id = 1;
+        $id = $this->id;
         // Get data for conceptos
         $conceptos = $this->getConceptos($id);
         // Get data for presupuestos;
         $presupuesto = $this->getPresupuestosData($id);
-        // get Data;
+        // get Data for CIS;
+        $cis = $this->getCISData($id);
 
         $sheets = [];
         $sheets[] = new ConceptosExport($conceptos);
-        $sheets[] = ['esto es','dos'];
+        $sheets[] = new CIExport($cis);
         $sheets[] = new PresupuestoExport($presupuesto['estructura_final'], $presupuesto['municipios_names']);
         
         return $sheets;
@@ -94,6 +96,42 @@ class MultipleSheetExport implements WithMultipleSheets
         foreach ($padres_referencias as &$padre) {
             // Sumamos el presupuesto nuevo al presupuesto actual del padre
             $padre['presupuesto'] += $presupuestoNuevo;
+        }
+    }
+
+    public function getCISData($id_presupuesto){
+        $registros = PresupuestoCI::with('partida', 'beneficiario')->where('id_presupuesto', $id_presupuesto)->get();
+      
+        $estructuraFinal=[];
+        foreach ($registros as $registro) {
+
+            $partida = $registro->partida;
+            // Carga todos los padres de forma recursiva
+            $jerarquia = $partida->obtenerJerarquiaPadres();
+
+            $this->agregarPartidaPorJerarquia($estructuraFinal, $jerarquia, $registro->toArray());
+        }
+
+        $data=[];
+        $this->recorrerJerarquia($estructuraFinal, 3, $data);
+        return $estructuraFinal;
+    }
+
+    public function recorrerJerarquia($estructura, $nivel, &$rows)
+    {
+        foreach ($estructura as $nodo) {
+            $nombre = $nodo['nombre'] ?? $nodo['partida']['nombre'];
+            $presupuesto = $nodo['presupuesto'] ?? ($nodo['presupuesto_total'] ?? '');
+
+            $rows[] = [$nombre, $presupuesto];
+
+            // Guardamos la fila actual (última añadida) y nivel
+            $filaActual = count($rows);
+            $filasConNivel[$filaActual] = $nivel;
+
+            if (isset($nodo['children']) && is_array($nodo['children'])) {
+                self::recorrerJerarquia($nodo['children'], $nivel + 1, $rows);
+            }
         }
     }
 }

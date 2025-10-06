@@ -21,6 +21,9 @@ return new class extends Migration
             
             $table->string('estatus')->default('aprobado');
             
+            $table->string('tipo_cambio')->default('MXN');
+            $table->float('valor_cambio')->default(1);
+
             $table->string('creado_por');
             $table->string('actualizado_por')->nullable();
 
@@ -35,6 +38,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('carta_instruccion');
+        Schema::dropIfExists('presupuestos');
     }
 };

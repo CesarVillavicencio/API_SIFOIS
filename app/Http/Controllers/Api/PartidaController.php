@@ -8,8 +8,19 @@ use App\Models\Partida;
 
 class PartidaController extends Controller
 {
-    public function getPartidas(){
-        $partidas = Partida::whereNull('padre_id')->orderBy('id','asc')->get();
+    public function getPartidas(Request $request){
+        //$partidas = Partida::whereNull('padre_id')->orderBy('id','asc')->get();
+        //return $partidas;
+
+        $query = Partida::query();
+
+        $query->when($request->busqueda != null, function($b) use ($request){
+            // PostgreSQL's LIKE operator is case-sensitive by default. To perform a case-insensitive search, use the ILIKE operator.
+            $b->where('nombre', 'ILIKE', '%'.$request->busqueda .'%');
+        });
+
+        $partidas = $query->whereNull('padre_id')->orderBy('id','desc')->get();
+
         return $partidas;
     }
 

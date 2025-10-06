@@ -16,7 +16,7 @@ return new class extends Migration
             $table->integer('ci');
             //Presupuestos
             $table->unsignedBigInteger('id_presupuesto');
-            $table->foreign('id_presupuesto')->references('id')->on('presupuestos');
+            $table->foreign('id_presupuesto')->references('id')->on('presupuestos')->cascadeOnDelete();
             // Partidas
             $table->unsignedBigInteger('id_partida');
             $table->foreign('id_partida')->references('id')->on('partidas');
@@ -27,7 +27,7 @@ return new class extends Migration
             // $table->json('id_municipio');
 
             
-            $table->string('tipo_cambio');
+            
             $table->decimal('presupuestado',9,2);
             $table->json('importe_meses')->nullable();
             $table->decimal('importe', 9,2);

@@ -18,22 +18,10 @@ use Carbon\Carbon;
 class ChiliTest {
 
     public static function test(): mixed {
-        $registros = PresupuestoCI::with('partida', 'beneficiario')->where('id_presupuesto', 1)->get();
-        // $registros = PresupuestoPartida::with('partida')->where('id_presupuesto', 1)->get();
-        $estructuraFinal=[];
-        foreach ($registros as $registro) {
-
-            $partida = $registro->partida;
-            // Carga todos los padres de forma recursiva
-            $jerarquia = $partida->obtenerJerarquiaPadres();
-
-            self::agregarPartidaPorJerarquia($estructuraFinal, $jerarquia, $registro->toArray());
-        }
-
-        $data=[];
-        self::recorrerJerarquia($estructuraFinal, 3, $data);
-        return $estructuraFinal;
         
+        $query = Partida::query();       
+        $partidas = $query->whereNull('padre_id')->orderBy('id','desc')->paginate(2);
+        dd($partidas);
         
     }
 
@@ -66,7 +54,7 @@ class ChiliTest {
         foreach ($padres_referencias as &$padre) {
             // Sumamos el presupuesto nuevo al presupuesto actual del padre
             $padre['presupuesto'] += $presupuestoNuevo;
-            dd($padre);
+            // dd($padre);
         }
         
         

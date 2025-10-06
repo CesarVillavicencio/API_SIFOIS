@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();   
 
             $table->unsignedBigInteger('id_presupuesto');
-            $table->foreign('id_presupuesto')->references('id')->on('presupuestos');
+            $table->foreign('id_presupuesto')->references('id')->on('presupuestos')->cascadeOnDelete();
 
             $table->unsignedBigInteger('id_partida');
             $table->foreign('id_partida')->references('id')->on('partidas');

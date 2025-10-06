@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\PresupuestoExport;
 use App\Exports\ConceptosExport;
+use App\Exports\CIExport;
 use App\Exports\MultipleSheetExport;
 use App\Models\Presupuesto;
 use App\Models\Partida;
@@ -74,24 +75,43 @@ class PresupuestosController extends Controller
     }
 
     public function getAll(){
-        $presupuestos = Presupuesto::paginate(20);
+        $presupuestos = Presupuesto::orderBy('id','desc')->paginate(20);
         return $presupuestos;
     }
 
     public function createPresupuesto(Request $request){
         $ids=[];
+        //return $request->id_municipio;
         foreach ($request->id_municipio as $key => $municipio) {
-            $ids[] = $municipio['municipio_id'];
+            $ids[] = $municipio;
         }
 
         $presupuesto = Presupuesto::create([
+            'serie'         => $request->serie,
             'periodo'       => $request->periodo ?? '2021-2027',
             'estatus'       => 'aprobado',
             'year'          => $request->year ?? '2025',
             'id_municipio'  => $ids,
-            'creado_por'    => $request->creado_por
+            'creado_por'    => $request->creado_por,
+            'tipo_cambio'   => $request->tipo_cambio,
+            'valor_cambio'  => $request->valor_cambio
         ]);
 
+        return $presupuesto;
+    }
+
+    public function toggleEstatus(Request $request){
+        $id = $request->id;
+        $presupuesto = Presupuesto::findOrFail($id);
+        $oldEstatus = $presupuesto->estatus;
+        $presupuesto->estatus = $request->estatus;
+        $presupuesto->save();
+
+        // Bitacora
+        $bitacora = new Bitacora();
+        $bitacora->usuario = $request->creado_por;
+        $bitacora->descripcion = 'Se cambio el estatus de '.$oldEstatus.' a '.$request->estatus;
+        $presupuesto->bitacora()->save($bitacora);
         return $presupuesto;
     }
 
@@ -185,7 +205,7 @@ class PresupuestosController extends Controller
         // $ci = PresupuestoCI::with('partida', 'beneficiario')->where('id_presupuesto',$request->id)->get();
         // return $ci;
 
-        $registros = PresupuestoCI::with('partida', 'beneficiario')->where('id_presupuesto', 1)->get();
+        $registros = PresupuestoCI::with('partida', 'beneficiario')->where('id_presupuesto', $request->id)->orderBy('id','DESC')->get();
         // $registros = PresupuestoPartida::with('partida')->where('id_presupuesto', 1)->get();
         $estructuraFinal=[];
         foreach ($registros as $registro) {
@@ -221,13 +241,32 @@ class PresupuestosController extends Controller
     }
 
     public function updateImporteMeses(Request $request){
+        $presupuesto = Presupuesto::findOrFail($request->id_presupuesto);
+        $disponible = $presupuesto->presupuestado - $presupuesto->ejercido;
 
-        $pci = PresupuestoCI::findOrFail($request->id);
-        $pci->update($request->all());
+        //Obtener suma de lo ejercido
+        $pcis = PresupuestoCI::where('id_presupuesto', $request->id_presupuesto)->where('id', '!=', $request->id)->get();
+        $sumaDeOtrosCI = 0;
+        foreach ($pcis as $key => $pci) {            
+            foreach ($pci->importe_meses as $key => $value) {
+                $sumaDeOtrosCI += $value['importe'];
+            }
+        }
+
+        $pci = PresupuestoCI::findOrFail($request->id);       
         $importe = 0;
-        foreach ($pci->importe_meses as $key => $value) {
+        foreach ($request->importe_meses as $key => $value) {
             $importe += $value['importe'];
         }
+
+        $importeTotal = $importe + $sumaDeOtrosCI;
+
+        // return ['importe'=> $importe, 'disponible' => $disponible, 'presupuestado'=> $presupuesto->presupuestado];
+        if((float) $importeTotal > (float) $presupuesto->presupuestado){
+            abort(404, 'Excede el importe. disponible: ' .$disponible .'. total de importe: ' .$importe);
+        }
+        $pci->update($request->all());
+
         $pci->importe = $importe;
         $pci->save();
         return $pci;
@@ -282,9 +321,10 @@ class PresupuestosController extends Controller
         return Excel::download(new ConceptosExport($data), 'conceptos.xlsx');
     }
 
+    //PRESUPUESTO CARTA INSTRUCCION
     public function createPresupuestoCI(Request $request){
         $exists = PresupuestoCi::where('id_partida', $request->id_partida)
-        ->where('id_beneficiario', $request->id_beneficiario)
+        ->where('id_beneficiario', $request->id_beneficiario)->where('id_presupuesto', $request->id_presupuesto)
         ->exists();
 
         if($exists){
@@ -302,9 +342,8 @@ class PresupuestosController extends Controller
             'ci'                => $ci_id,
             'id_beneficiario'   => $request->id_beneficiario,
             'id_municipio'      => $request->id_municipio,
-            'tipo_cambio'       => 20,//$request->tipo_cambio,
             'presupuestado'     => 0,
-            'importe'           => $request->importe ?? 0,
+            'importe'           => 0,
             'importe_meses'     => $this->getMonthsValue(),
             'concepto'          => $request->concepto,
             'observaciones'     => $request->observaciones,
@@ -323,22 +362,44 @@ class PresupuestosController extends Controller
 
     public static function getMonthsValue(){
         return [
-            ['mes'=>'enero', 'importe'=> 0.00],
-            ['mes'=>'febrero', 'importe'=> 0.00],
-            ['mes'=>'marzo', 'importe'=> 0.00],
-            ['mes'=>'abril', 'importe'=> 0.00],
-            ['mes'=>'mayo', 'importe'=> 0.00],
-            ['mes'=>'junio', 'importe'=> 0.00],
-            ['mes'=>'julio', 'importe'=> 0.00],
-            ['mes'=>'agosto', 'importe'=> 0.00],
-            ['mes'=>'septiembre', 'importe'=> 0.00],
-            ['mes'=>'octubre', 'importe'=> 0.00],
-            ['mes'=>'noviembre', 'importe'=> 0.00],
-            ['mes'=>'diciembre', 'importe'=> 0.00],
+            ['mes'=>'enero', 'importe'=> "0.00"],
+            ['mes'=>'febrero', 'importe'=> "0.00"],
+            ['mes'=>'marzo', 'importe'=> "0.00"],
+            ['mes'=>'abril', 'importe'=> "0.00"],
+            ['mes'=>'mayo', 'importe'=> "0.00"],
+            ['mes'=>'junio', 'importe'=> "0.00"],
+            ['mes'=>'julio', 'importe'=> "0.00"],
+            ['mes'=>'agosto', 'importe'=> "0.00"],
+            ['mes'=>'septiembre', 'importe'=> "0.00"],
+            ['mes'=>'octubre', 'importe'=> "0.00"],
+            ['mes'=>'noviembre', 'importe'=> "0.00"],
+            ['mes'=>'diciembre', 'importe'=> "0.00"],
         ];
     }
 
-    public function getMultipleExcel(){
-        return Excel::download(new MultipleSheetExport(), 'MultipleSheet.xlsx');
+    public function getExcelCI(Request $request){
+        $id_presupuesto = $request->id;
+        // $presupuestoCI = PresupuestoCI::with('beneficiario','presu','partida')->where('id_presupuesto',$id_presupuesto)->get();
+
+        $registros = PresupuestoCI::with('partida', 'beneficiario')->where('id_presupuesto', $id_presupuesto)->get();
+      
+        $estructuraFinal=[];
+        foreach ($registros as $registro) {
+
+            $partida = $registro->partida;
+            // Carga todos los padres de forma recursiva
+            $jerarquia = $partida->obtenerJerarquiaPadres();
+
+            $this->agregarPartidaPorJerarquia($estructuraFinal, $jerarquia, $registro->toArray());
+        }
+
+        $data=[];
+        $this->recorrerJerarquia($estructuraFinal, 3, $data);
+
+        return Excel::download(new CIExport($estructuraFinal), 'CartasInstruccion.xlsx');
+    }
+    public function getMultipleExcel(Request $request){
+        // return $request;
+        return Excel::download(new MultipleSheetExport($request->id), 'MultipleSheet.xlsx');
     }
 };
