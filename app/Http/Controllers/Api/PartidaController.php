@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Partida;
+use App\Models\Bitacora;
 
 class PartidaController extends Controller
 {
@@ -41,16 +42,29 @@ class PartidaController extends Controller
             'creado_por'  => $request->creado_por
         ]);
 
+        // Bitacora
+        $bitacora = new Bitacora();
+        $bitacora->usuario = $request->creado_por;
+        $bitacora->descripcion = 'Se creo la partida '.$request->nombre;
+        $partida->bitacora()->save($bitacora);
+    
         return $partida;
     }
 
     public function updatePartida(Request $request){
         $partida = Partida::findOrFail($request->id);
+        $old_nombre = $partida->nombre;
         $partida->nombre            = $request->nombre;
         $partida->padre_id          = $request->padre_id;
         $partida->actualizado_por   = $request->actualizado_por;
         $partida->save();
         
+        // Bitacora
+        $bitacora = new Bitacora();
+        $bitacora->usuario = $request->actualizado_por;
+        $bitacora->descripcion = 'Se actualizo la partida '.$old_nombre.' a ' .$partida->nombre;
+        $partida->bitacora()->save($bitacora);
+
         return $partida;
     }
 
@@ -59,6 +73,12 @@ class PartidaController extends Controller
         $partida = Partida::findOrFail($id);
         $partida->delete();
         
+        // Bitacora
+        $bitacora = new Bitacora();
+        $bitacora->usuario = $request->eliminado_por;
+        $bitacora->descripcion = 'Se elimino la partida '.$partida->nombre;
+        $partida->bitacora()->save($bitacora);
+
         return $partida;
     }
 }

@@ -13,6 +13,10 @@ class Beneficiario extends Model
     protected $table = 'beneficiarios';
     protected $fillable = ['nombre', 'apellido', 'creado_por', 'actualizado_por'];
 
+    public function getFullNameAttribute()
+    {
+        return "{$this->nombre} {$this->apellido}";
+    }
 
     public function bitacora()
     {

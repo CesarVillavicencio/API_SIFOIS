@@ -31,4 +31,9 @@ class PresupuestoCI extends Model
     {
         return $this->belongsTo(Beneficiario::class, 'id_beneficiario');
     }
+
+    public function getPresupuestadoEnPartidaAttribute()
+    {
+        // return $this->;
+    }
 }

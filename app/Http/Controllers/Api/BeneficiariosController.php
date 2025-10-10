@@ -68,7 +68,7 @@ class BeneficiariosController extends Controller
         $beneficiario->actualizado_por  = $request->actualizado_por;
         $beneficiario->save();
 
-         // Bitacora
+        // Bitacora
         $bitacora = new Bitacora();
         $bitacora->usuario = $request->actualizado_por;
         $bitacora->morphable_id = $beneficiario->id;
@@ -83,6 +83,13 @@ class BeneficiariosController extends Controller
         $id = $request->id;
         $beneficiario = Beneficiario::findOrFail($id);
         $beneficiario->delete();
+        
+        // Bitacora
+        $bitacora = new Bitacora();
+        $bitacora->usuario = $request->eliminado_por;
+        $bitacora->morphable_id = $beneficiario->id;
+        $bitacora->descripcion = 'Se eliminó el beneficiario con el nombre:'  .$beneficiario->nombre .' '.$beneficiario->apellido;
+        $beneficiario->bitacora()->save($bitacora);
         
         return $beneficiario;
     }

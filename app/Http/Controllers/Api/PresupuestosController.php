@@ -79,6 +79,10 @@ class PresupuestosController extends Controller
         return $presupuestos;
     }
 
+    public function getPresupuesto(Presupuesto $presupuesto){
+        return $presupuesto;
+    }
+
     public function createPresupuesto(Request $request){
         $ids=[];
         //return $request->id_municipio;
@@ -243,7 +247,13 @@ class PresupuestosController extends Controller
     public function updateImporteMeses(Request $request){
         $presupuesto = Presupuesto::findOrFail($request->id_presupuesto);
         $disponible = $presupuesto->presupuestado - $presupuesto->ejercido;
-
+        
+        //Checar que no venga un con valor negativo
+        foreach ($request->importe_meses as $key => $value) {
+           if($value['importe'] < 0) {
+                abort(404, 'No acepta numeros negativos');
+           }
+        }
         //Obtener suma de lo ejercido
         $pcis = PresupuestoCI::where('id_presupuesto', $request->id_presupuesto)->where('id', '!=', $request->id)->get();
         $sumaDeOtrosCI = 0;
@@ -291,6 +301,9 @@ class PresupuestosController extends Controller
     }
 
     public function setPresupuestoConcepto(Request $request){
+        if( $request->importe <= 0) {
+            abort(404, 'No acepta Numeros menores o iguales a cero');
+        }
         $pc = PresupuestoConcepto::Create([
             'id_presupuesto' => $request->id_presupuesto,
             'concepto' => $request->concepto,
@@ -353,6 +366,16 @@ class PresupuestosController extends Controller
         ]);
     }
 
+    public function updatePresupuestoCI(Request $request){
+        $ci = PresupuestoCI::findOrFail($request->id);
+        $ci->fecha = $request->fecha;
+        $ci->concepto = $request->concepto;
+        $ci->observaciones = $request->observaciones;
+        $ci->save();
+        return $ci;
+
+    }
+
     public function deletePresupuestoCI(Request $request){
         $id = $request->id;
         $presupuestoCI = PresupuestoCI::findOrFail($id);
@@ -402,4 +425,70 @@ class PresupuestosController extends Controller
         // return $request;
         return Excel::download(new MultipleSheetExport($request->id), 'MultipleSheet.xlsx');
     }
+
+    //Reportes
+    public function getDataForPresupuestoReportes(Request $request){    
+        $data_beneficiarios = [];
+        $data_partida = [];
+        $data_dona = [];
+        $total = 0;
+
+        //get CIS del presupuesto
+        $CIS =  PresupuestoCi::with('beneficiario','partida','presu')->where('id_presupuesto', $request->id)->get();
+
+        // Data para beneficiarios
+        $beneficiarios = $CIS->groupBy(function($val) {
+            return $val->beneficiario->fullName;
+        });
+
+        $beneficiarios->each(function ($beneficiario, $key) use (&$labels, &$data_beneficiarios){
+            
+            $data_beneficiarios[] = [
+                'label'=> $key, 
+                'backgroundColor' => sprintf("#%02x%02x%02x", mt_rand(0, 255), mt_rand(0, 255), mt_rand(0, 255)), 
+                'data'=> [$beneficiario->sum('importe')]
+            ];
+        });
+
+        // Data para Partidas
+        $data_partidas = $CIS->groupBy(function($val) {
+            return $val->partida->nombre;
+        });
+
+        $data_partidas->each(function ($partida, $key) use (&$data_partida){
+            
+            $data_partida[] = [
+                'label'=> $key, 
+                'backgroundColor' => sprintf("#%02x%02x%02x", mt_rand(0, 255), mt_rand(0, 255), mt_rand(0, 255)), 
+                'data'=> [$partida->sum('importe')]
+            ];
+        });
+
+        // PieChart data
+        $total = 0;
+        $labels = [];
+        $background = [];
+        $data = [];
+
+        $data_partidas->each(function ($partida, $key) use (&$background, &$data, &$labels, &$loop, &$total){
+           
+            $labels[] = $key;
+            $background[]= sprintf("#%02x%02x%02x", mt_rand(0, 255), mt_rand(0, 255), mt_rand(0, 255));
+            $data[] = $partida->sum('importe');
+            $total = ($partida[0]->presu->getPresupuesto() - $partida[0]->presu->getEjercido());
+             
+        });
+        $labels[] = 'Por Ejercer';
+        $background[] = sprintf("#%02x%02x%02x", mt_rand(0, 255), mt_rand(0, 255), mt_rand(0, 255));
+        $data[] = $total;
+
+        $data_dona[] = [
+            'label'=> $labels, 
+            'backgroundColor' => $background, 
+            'data'=> $data
+        ];
+
+        return ['data_partidas' => $data_partida, 'data_beneficiarios' => $data_beneficiarios, 'data_dona' => $data_dona];
+
+    }   
 };

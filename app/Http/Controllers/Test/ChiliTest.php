@@ -18,10 +18,38 @@ use Carbon\Carbon;
 class ChiliTest {
 
     public static function test(): mixed {
+        $data_dona['label']=[];
+        $total = 0;
+        $labels = [];
+        $background = [];
+        $data = [];
+       
+        $CIS =  PresupuestoCi::with('beneficiario','partida','presu')->where('id_presupuesto', 2)->get();
         
-        $query = Partida::query();       
-        $partidas = $query->whereNull('padre_id')->orderBy('id','desc')->paginate(2);
-        dd($partidas);
+        $data_partidas = $CIS->groupBy(function($val) {
+            return $val->partida->nombre;
+        });
+
+        $loop = 0;
+        $data_partidas->each(function ($partida, $key) use (&$background, &$data, &$labels, &$loop, &$total){
+            $text = $loop == 0 ? '':', ';
+
+            $labels[] = $key;
+            $background[] = sprintf("#%02x%02x%02x", mt_rand(0, 255), mt_rand(0, 255), mt_rand(0, 255));
+            $data[] = $partida->sum('importe');
+            $total = $partida[0]->presu->getPresupuesto();
+            $loop++;
+             
+        });
+        $data_array[] = [
+            'label'=> json_encode($labels), 
+            'backgroundColor' => json_encode($background), 
+            'data'=> json_encode($data), 
+        ];
+       
+        dd($labels);
+        return 'X';
+
         
     }
 

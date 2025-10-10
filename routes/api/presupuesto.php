@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 
 // Presupuestos
 Route::get('getAll',                [PresupuestosController::class, 'getAll'])->name('presupuestos.getAll');
+Route::get('getPresupuesto/{presupuesto}', [PresupuestosController::class, 'getPresupuesto'])->name('presupuestos.getPresupuesto');
 Route::post('createPresupuesto',    [PresupuestosController::class, 'createPresupuesto'])->name('presupuestos.createPresupuesto');
 Route::post('updatePresupuesto',    [PresupuestosController::class, 'updatePresupuesto'])->name('presupuestos.updatePresupuesto');
 Route::post('deletePresupuesto',    [PresupuestosController::class, 'deletePresupuesto'])->name('presupuestos.deletePresupuesto');
@@ -19,6 +20,7 @@ Route::get('getPresupuestoCI',          [PresupuestosController::class, 'getPres
 Route::post('updateImporteMeses',       [PresupuestosController::class, 'updateImporteMeses'])->name('presupuestos.updateImporteMeses');
 Route::get('getPartidasByPresupuesto',  [PresupuestosController::class, 'getPartidasByPresupuesto'])->name('presupuestos.getPartidasByPresupuesto');
 Route::post('createPresupuestoCI',      [PresupuestosController::class, 'createPresupuestoCI'])->name('presupuestos.createPresupuestoCI');
+Route::post('updatePresupuestoCI',      [PresupuestosController::class, 'updatePresupuestoCI'])->name('presupuestos.updatePresupuestoCI');
 Route::post('deletePresupuestoCI',      [PresupuestosController::class, 'deletePresupuestoCI'])->name('presupuestos.deletePresupuestoCI');
 Route::get('getCIExcel',                [PresupuestosController::class, 'getExcelCI'])->name('presupuestos.getExcelCI');
 
@@ -32,3 +34,6 @@ Route::get('getExcelConceptos',             [PresupuestosController::class, 'get
 
 //MultipleSheetExport
 Route::get('getMultipleExcel',              [PresupuestosController::class, 'getMultipleExcel'])->name('presupuestos.getMultipleExcel');
+
+//Reportes
+Route::get('getDataForPresupuestoReportes', [PresupuestosController::class, 'getDataForPresupuestoReportes'])->name('presupuestos.getDataForPresupuestoReportes');
