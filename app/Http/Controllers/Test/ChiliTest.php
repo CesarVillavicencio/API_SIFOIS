@@ -18,39 +18,39 @@ use Carbon\Carbon;
 class ChiliTest {
 
     public static function test(): mixed {
-        $data_dona['label']=[];
-        $total = 0;
+         
         $labels = [];
-        $background = [];
         $data = [];
-       
-        $CIS =  PresupuestoCi::with('beneficiario','partida','presu')->where('id_presupuesto', 2)->get();
-        
-        $data_partidas = $CIS->groupBy(function($val) {
-            return $val->partida->nombre;
-        });
 
-        $loop = 0;
-        $data_partidas->each(function ($partida, $key) use (&$background, &$data, &$labels, &$loop, &$total){
-            $text = $loop == 0 ? '':', ';
+        $year = 2025;//$request->year;
+        $months = [
+        1 => 'enero',
+        2 => 'febrero',
+        3 => 'marzo',
+        4 => 'abril',
+        5 => 'mayo',
+        6 => 'junio',
+        7 => 'julio',
+        8 => 'agosto',
+        9 => 'septiembre',
+        10 => 'octubre',
+        11 => 'noviembre',
+        12 => 'diciembre'
+    ];
 
-            $labels[] = $key;
-            $background[] = sprintf("#%02x%02x%02x", mt_rand(0, 255), mt_rand(0, 255), mt_rand(0, 255));
-            $data[] = $partida->sum('importe');
-            $total = $partida[0]->presu->getPresupuesto();
-            $loop++;
-             
-        });
-        $data_array[] = [
-            'label'=> json_encode($labels), 
-            'backgroundColor' => json_encode($background), 
-            'data'=> json_encode($data), 
-        ];
-       
-        dd($labels);
-        return 'X';
+        $cartas = PresupuestoCI::whereYear('fecha', $year)
+        ->orderBy('fecha','asc')->get();
 
-        
+
+        for ($i = 0; $i <= 11; $i++) {
+            $labels[] = $months[$i];
+            $data[] = $cartas->sum(function ($item) use ($i) {
+                return $item['importe_meses'][$i]['importe'];
+            });
+        }
+
+        return ['labels' => $labels, 'data' => $data];
+
     }
 
     public static function agregarPartidaPorJerarquia(&$estructura, $jerarquia, $elemento) {

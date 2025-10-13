@@ -98,7 +98,8 @@ class PresupuestosController extends Controller
             'id_municipio'  => $ids,
             'creado_por'    => $request->creado_por,
             'tipo_cambio'   => $request->tipo_cambio,
-            'valor_cambio'  => $request->valor_cambio
+            'valor_cambio'  => $request->valor_cambio,
+            // 'fecha'         => $request->fecha
         ]);
 
         return $presupuesto;
