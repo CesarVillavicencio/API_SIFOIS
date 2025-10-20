@@ -32,6 +32,7 @@ Route::name('dashboard.')->prefix('dashboard')->group(__DIR__.'/api/dashboard.ph
 Route::name('presupuesto.')->prefix('presupuesto')->group(__DIR__.'/api/presupuesto.php');
 Route::name('presupuesto_partida.')->prefix('presupuesto_partida')->group(__DIR__.'/api/presupuesto_partida.php');
 Route::name('bitacora.')->prefix('bitacora')->group(__DIR__.'/api/bitacora.php');
+Route::name('rights.')->prefix('rights')->group(__DIR__.'/api/rights.php');
 
 // **********************************
 // Onlye Developing Testing Routes **

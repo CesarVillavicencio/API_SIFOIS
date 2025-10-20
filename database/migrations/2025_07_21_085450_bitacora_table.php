@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('bitacora', function (Blueprint $table) {
             $table->id();   
             $table->string('usuario');
-            $table->string('descripcion');
+            $table->text('descripcion');
             $table->unsignedBigInteger('morphable_id');
             $table->string('morphable_type');
 

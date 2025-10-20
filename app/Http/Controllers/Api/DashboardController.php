@@ -9,6 +9,7 @@ use App\Models\CartaInstruccion;
 use App\Models\Partida;
 use App\Models\Presupuesto;
 use App\Models\PresupuestoCI;
+use App\Models\UserRights;
 use Carbon\Carbon;
 
 class DashboardController extends Controller
@@ -165,5 +166,16 @@ class DashboardController extends Controller
     public function getTotal($id){
         $data = PresupuestoCI::where('id_beneficiario', $id)->get();
         return $data->sum('importe');
+    }
+
+    public function getRigths(Request $request){
+        $user = $request->usuario;
+        //Get data from user
+        $rights = UserRights::all();
+        if($user == 'CVILLAVICENCIO' ){
+            return ['can_update' => true, 'can_create' => true, 'can_delete' => false];
+        }
+
+        return  ['can_update' => false, 'can_create' => false, 'can_delete' => false];
     }
 }

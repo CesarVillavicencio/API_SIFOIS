@@ -12,7 +12,7 @@ class BitacoraController extends Controller
     
         if($request->has('tipo')){
             $type = 'App\Models\\'.$request->tipo;
-            $data = Bitacora::where('morphable_type', $type)->get();
+            $data = Bitacora::where('morphable_type', $type)->orderBy('id','desc')->get();
         }
         else{
             $data = Bitacora::all();
@@ -24,7 +24,7 @@ class BitacoraController extends Controller
     public function getBitacoraByID(Request $request){
     
         $id = $request->id;
-        $data = Bitacora::where('morphable_type', 'App\Models\\'.$request->tipo)->where('morphable_id', $id)->get();
+        $data = Bitacora::where('morphable_type', 'App\Models\\'.$request->tipo)->where('morphable_id', $id)->orderBy('id','desc')->get();
 
         return $data;
     }

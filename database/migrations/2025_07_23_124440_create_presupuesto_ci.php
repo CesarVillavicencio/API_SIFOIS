@@ -14,19 +14,20 @@ return new class extends Migration
         Schema::create('presupuesto_ci', function (Blueprint $table) {
             $table->id();  
             $table->integer('ci');
+
             //Presupuestos
             $table->unsignedBigInteger('id_presupuesto');
             $table->foreign('id_presupuesto')->references('id')->on('presupuestos')->cascadeOnDelete();
+
             // Partidas
             $table->unsignedBigInteger('id_partida');
             $table->foreign('id_partida')->references('id')->on('partidas');
+
             // Beneficiarios
             $table->unsignedBigInteger('id_beneficiario');
             $table->foreign('id_beneficiario')->references('id')->on('beneficiarios')->nullable();
             // Municipios
-            // $table->json('id_municipio');
-
-            
+            // $table->json('id_municipio'); 
             
             $table->decimal('presupuestado',9,2);
             $table->json('importe_meses')->nullable();

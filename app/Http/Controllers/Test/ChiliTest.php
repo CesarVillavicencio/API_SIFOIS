@@ -12,45 +12,35 @@ use App\Models\Bitacora;
 use App\Models\PresupuestoCi;
 use App\Models\Sepomex\Municipio;
 use Carbon\Carbon;
+use App\Models\UserRights;
 // use DB;
 
 
 class ChiliTest {
 
     public static function test(): mixed {
-         
-        $labels = [];
-        $data = [];
+        $user = 'CVILLAVICENCIO';
+        $rights  = UserRights::where('usuario', $user)->get()->groupBy('modulo');
+        return $rights;
 
-        $year = 2025;//$request->year;
-        $months = [
-        1 => 'enero',
-        2 => 'febrero',
-        3 => 'marzo',
-        4 => 'abril',
-        5 => 'mayo',
-        6 => 'junio',
-        7 => 'julio',
-        8 => 'agosto',
-        9 => 'septiembre',
-        10 => 'octubre',
-        11 => 'noviembre',
-        12 => 'diciembre'
-    ];
+    }
 
-        $cartas = PresupuestoCI::whereYear('fecha', $year)
-        ->orderBy('fecha','asc')->get();
+    public static function createRights($user){
+        $modules = ['Beneficiarios','Partidas','Presupuestos'];
+        $actions = ['can_create','can_update','can_delete'];
 
-
-        for ($i = 0; $i <= 11; $i++) {
-            $labels[] = $months[$i];
-            $data[] = $cartas->sum(function ($item) use ($i) {
-                return $item['importe_meses'][$i]['importe'];
-            });
+        foreach ($modules as $key => $m) {
+            foreach ($actions as $key => $a) {
+                UserRights::create([
+                    'usuario'=> $user,
+                    'modulo' => $m,
+                    'action' => $a,
+                    'value' => false
+                ]);
+            }
         }
-
-        return ['labels' => $labels, 'data' => $data];
-
+        $rights =  UserRights::where('usuario', $user)->get();
+        return $rights;
     }
 
     public static function agregarPartidaPorJerarquia(&$estructura, $jerarquia, $elemento) {

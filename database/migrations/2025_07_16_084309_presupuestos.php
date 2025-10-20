@@ -29,6 +29,7 @@ return new class extends Migration
 
             $table->string('serie')->nullable();
             $table->date('fecha');
+            
             $table->timestamps();
             $table->softDeletes();
         });

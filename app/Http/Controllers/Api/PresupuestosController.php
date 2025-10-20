@@ -99,7 +99,7 @@ class PresupuestosController extends Controller
             'creado_por'    => $request->creado_por,
             'tipo_cambio'   => $request->tipo_cambio,
             'valor_cambio'  => $request->valor_cambio,
-            // 'fecha'         => $request->fecha
+            'fecha'         => $request->fecha_creacion
         ]);
 
         return $presupuesto;
@@ -264,7 +264,8 @@ class PresupuestosController extends Controller
             }
         }
 
-        $pci = PresupuestoCI::findOrFail($request->id);       
+        $pci = PresupuestoCI::findOrFail($request->id);
+        $oldValues = $pci->importe_meses;
         $importe = 0;
         foreach ($request->importe_meses as $key => $value) {
             $importe += $value['importe'];
@@ -280,6 +281,29 @@ class PresupuestosController extends Controller
 
         $pci->importe = $importe;
         $pci->save();
+
+        // Bitacora
+        $cambios = [];
+
+        foreach ($oldValues as $key => $item) {
+            $mes = $item['mes'];
+            $importeOriginal = $item['importe'];
+            $importeActualizado = $pci->importe_meses[$key]['importe'];
+
+            if ($importeOriginal !== $importeActualizado) {
+                $cambios[] = [
+                    'mes' => $mes,
+                    'importe_anterior' => $importeOriginal,
+                    'importe_nuevo' => $importeActualizado,
+                ];
+            }
+        }
+
+        $bitacora = new Bitacora();
+        $bitacora->usuario = $request->actualizado_por;
+        $bitacora->descripcion = 
+        'Se han modificado los meses: '. json_encode($cambios);
+        $pci->presu->bitacora()->save($bitacora);
         return $pci;
     }
 
@@ -365,6 +389,14 @@ class PresupuestosController extends Controller
             'creado_por'        => $request->creado_por,
             'actualizado_por'   => $request->actualizado_por,
         ]);
+
+        // Bitacora
+        $bitacora = new Bitacora();
+        $bitacora->usuario = $request->creado_por;
+        $bitacora->descripcion = 
+        'Se agrego el CI con la partida '.$pci->partida->nombre .', y beneficiario '. $pci->beneficiario->nombre;
+        $pci->presu->bitacora()->save($bitacora);
+
     }
 
     public function updatePresupuestoCI(Request $request){
