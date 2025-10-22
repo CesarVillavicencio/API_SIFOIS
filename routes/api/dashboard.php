@@ -7,6 +7,4 @@ use Illuminate\Support\Facades\Route;
 Route::get('getChartData',          [DashboardController::class, 'getChartData'])->name('getChartData');
 Route::get('getChartMunicipios',    [DashboardController::class, 'getChartMunicipios'])->name('getChartMunicipios');
 Route::get('getChartYearMonths',    [DashboardController::class, 'getChartYearMonths'])->name('getChartYearMonths');
-//Rigths
-Route::get('getRigths',             [DashboardController::class, 'getRigths'])->name('getRigths');
 

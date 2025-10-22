@@ -18,7 +18,7 @@ class DashboardController extends Controller
         $labels = [];
         $data = [];
 
-        $year = 2025;//$request->year;
+        $year = $request->year;
         $months = [
         0 => 'enero', 1 => 'febrero', 2 => 'marzo', 3 => 'abril', 4 => 'mayo', 5 => 'junio', 6 => 'julio', 7 => 'agosto',  8 => 'septiembre',  9 => 'octubre', 10 => 'noviembre', 11 => 'diciembre'
         ];
@@ -166,16 +166,5 @@ class DashboardController extends Controller
     public function getTotal($id){
         $data = PresupuestoCI::where('id_beneficiario', $id)->get();
         return $data->sum('importe');
-    }
-
-    public function getRigths(Request $request){
-        $user = $request->usuario;
-        //Get data from user
-        $rights = UserRights::all();
-        if($user == 'CVILLAVICENCIO' ){
-            return ['can_update' => true, 'can_create' => true, 'can_delete' => false];
-        }
-
-        return  ['can_update' => false, 'can_create' => false, 'can_delete' => false];
     }
 }
