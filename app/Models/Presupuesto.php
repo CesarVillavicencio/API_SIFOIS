@@ -17,7 +17,9 @@ class Presupuesto extends Model
 
     protected $casts = [
         'id_municipio' => 'array',
+        // 'fecha' => 'datetime', 
     ];
+
 
     protected $appends = ['ejercido', 'presupuestado']; 
 

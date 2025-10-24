@@ -23,7 +23,7 @@ class RightsController extends Controller
 
     public function getRights(Request $request){
         $user = $request->usuario;
-        $rights = UserRights::where('usuario', $user)->get();
+        $rights = UserRights::where('usuario', $user)->orderBy('modulo','asc')->get();
         $derechos = [];
 
         if($rights->isEmpty()){
@@ -37,11 +37,12 @@ class RightsController extends Controller
     }
 
     public static function createRights($user){
-        $modules = ['Beneficiarios','Partidas','Presupuestos'];
+        $modules = ['Beneficiarios','Partidas','Presupuestos', 'Permisos'];
         $actions = ['can_create','can_update','can_delete'];
 
         foreach ($modules as $key => $m) {
             foreach ($actions as $key => $a) {
+                // if ($m =='Permisos' && $a != 'can_see_module') {continue;}
                 UserRights::create([
                     'usuario'=> $user,
                     'modulo' => $m,
@@ -50,7 +51,7 @@ class RightsController extends Controller
                 ]);
             }
         }
-        $rights =  UserRights::where('usuario', $user)->get();
+        $rights =  UserRights::where('usuario', $user)->orderBy('modulo','asc')->get();
         return $rights;
     }
 

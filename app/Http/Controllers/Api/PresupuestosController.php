@@ -102,6 +102,13 @@ class PresupuestosController extends Controller
             'fecha'         => $request->fecha_creacion
         ]);
 
+        // Bitacora
+        $bitacora = new Bitacora();
+        $bitacora->usuario = $request->creado_por;
+        $bitacora->descripcion = 'Se Agrego el presupuesto con id: ' .$presupuesto->id;
+        $presupuesto->bitacora()->save($bitacora);
+        return $presupuesto;
+
         return $presupuesto;
     }
 
@@ -122,12 +129,33 @@ class PresupuestosController extends Controller
 
     public function updatePresupuesto(Request $request){
         $presupuesto = Presupuesto::findOrFail($request->id);
+        $originalValues = $presupuesto->getOriginal();
+
         $presupuesto->update([
             'periodo'       => $request->periodo,
             'year'          => $request->year,
             'id_municipio'  => $request->id_municipio
         ]);
-        
+
+        // Bitacora
+
+        // Obtener los nuevos valores que cambiaron
+        $newValues = $presupuesto->getChanges();
+
+        $changes = [];
+        foreach ($newValues as $key => $newValue) {
+            if ($key === 'updated_at') continue;
+            $changes[$key] = [
+                'valor_anterior' => $originalValues[$key] ?? null,
+                'valor_nuevo' => $newValue,
+            ];
+        }
+
+        $bitacora = new Bitacora();
+        $bitacora->usuario = $request->creado_por;
+        $bitacora->descripcion = 'Se actualizó el presupuesto con los siguientes cambios: ' . json_encode($changes);
+        $presupuesto->bitacora()->save($bitacora); 
+
         return $presupuesto;
 
     }
@@ -135,6 +163,12 @@ class PresupuestosController extends Controller
     public function deletePresupuesto(Request $request){
         $presupuesto = Presupuesto::findOrFail($request->id);
         $presupuesto->delete();
+
+        $bitacora = new Bitacora();
+        $bitacora->usuario = $request->eliminado_por;
+        $bitacora->descripcion = 'se elimino el presupuesto con el id: ' .$presupuesto->id;
+        $presupuesto->bitacora()->save($bitacora); 
+
         return $presupuesto;
     }
 
