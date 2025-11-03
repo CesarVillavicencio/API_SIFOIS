@@ -37,7 +37,7 @@ class RightsController extends Controller
     }
 
     public static function createRights($user){
-        $modules = ['Beneficiarios','Partidas','Presupuestos', 'Permisos'];
+        $modules = ['Beneficiarios','Partidas','Presupuestos'];
         $actions = ['can_create','can_update','can_delete'];
 
         foreach ($modules as $key => $m) {
