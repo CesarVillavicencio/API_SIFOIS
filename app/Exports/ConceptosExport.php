@@ -39,7 +39,7 @@ class ConceptosExport implements FromArray, WithEvents, ShouldAutoSize, WithHead
 
     public function headings(): array
     {
-        return array_keys($this->data[0]); // Encabezados a partir del primer elemento
+        return array_keys($this->data[0] ?? ['']); // Encabezados a partir del primer elemento
         
     }
 
