@@ -14,6 +14,9 @@ return new class extends Migration
         Schema::create('presupuestos', function (Blueprint $table) {
             $table->id();
 
+            $table->unsignedBigInteger('id_fideicomiso');
+            $table->foreign('id_fideicomiso')->references('id')->on('fideicomisos')->after('id');
+
             $table->string('periodo');
             $table->string('year');
             

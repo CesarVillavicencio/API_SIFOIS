@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\PresupuestosController;
 use Illuminate\Support\Facades\Route;
 
+Route::get('getFideicomisos',       [PresupuestosController::class, 'getFideicomisos'])->name('presupuestos.getFideicomisos');
 // Presupuestos
 Route::get('getAll',                [PresupuestosController::class, 'getAll'])->name('presupuestos.getAll');
 Route::get('getPresupuesto/{presupuesto}', [PresupuestosController::class, 'getPresupuesto'])->name('presupuestos.getPresupuesto');
@@ -23,6 +24,7 @@ Route::post('createPresupuestoCI',      [PresupuestosController::class, 'createP
 Route::post('updatePresupuestoCI',      [PresupuestosController::class, 'updatePresupuestoCI'])->name('presupuestos.updatePresupuestoCI');
 Route::post('deletePresupuestoCI',      [PresupuestosController::class, 'deletePresupuestoCI'])->name('presupuestos.deletePresupuestoCI');
 Route::get('getCIExcel',                [PresupuestosController::class, 'getExcelCI'])->name('presupuestos.getExcelCI');
+Route::post('cloneCI',                  [PresupuestosController::class, 'cloneCI'])->name('presupuestos.cloneCI');
 
 //Presupuesto-Conceptos
 Route::get('getPresupuestoConceptos',       [PresupuestosController::class, 'getPresupuestoConceptos'])->name('presupuestos.getPresupuestoConceptos');

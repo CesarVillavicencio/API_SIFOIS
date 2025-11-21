@@ -17,9 +17,15 @@ use App\Models\Sepomex\Municipio;
 use App\Models\PresupuestoCI;
 use App\Models\Bitacora;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class PresupuestosController extends Controller
 {
+    public function getFideicomisos(){
+        $fideicomisos = DB::table('fideicomisos')->get();
+        return $fideicomisos;
+    }
+
     public function getExcel(Request $request){
         $presupuesto = Presupuesto::findOrFail($request->id);       
         $registros = PresupuestoPartida::with('partida')->where('id_presupuesto', $request->id)->get();
@@ -43,7 +49,6 @@ class PresupuestosController extends Controller
     }
 
     public function agregarPartidaPorJerarquia(&$estructura, $jerarquia, $elemento) {
-
         $ref = &$estructura;
         // Guardaremos referencias a cada nodo padre para luego actualizar presupuesto
         $padres_referencias = [];
@@ -56,6 +61,7 @@ class PresupuestosController extends Controller
                 $ref[$nombre] = [
                     'nombre' => $nombre,
                     'presupuesto' => 0,
+                    'presupuestado' => 0,
                     'children' => [],
                 ];
             }
@@ -63,19 +69,36 @@ class PresupuestosController extends Controller
             $padres_referencias[] = &$ref[$nombre];
             $ref = &$ref[$nombre]['children'];
         }
+
         // Agregamos la partida final (elemento)
         $ref[] = $elemento;
         // Ahora actualizamos el presupuesto de cada padre sumando el presupuesto del nuevo elemento
-        $presupuestoNuevo = $elemento['importe'] ?? 0;
-        foreach ($padres_referencias as &$padre) {
+        $presupuestoNuevo = $elemento['importe'] ?? 0;      
+       
+        foreach ($padres_referencias as &$padre) {            
             // Sumamos el presupuesto nuevo al presupuesto actual del padre
-            $padre['presupuesto'] += $presupuestoNuevo;
-        }
+           $padre['presupuesto'] += $presupuestoNuevo;
+
+            // Inicializar lista de procesados para NO repetir partidas
+            if (!isset($padre['procesados'])) {
+                $padre['procesados'] = [];
+            }
+
+            $idPartida = $elemento['id_partida'];
+            $presupuestadoNuevo = $elemento['presupuestadoEnPartida'] ?? 0;
+
+            // Solo sumar si no se ha contado esta partida antes
+            if (!in_array($idPartida, $padre['procesados'])) {
+                $padre['presupuestado'] += $presupuestadoNuevo;
+                $padre['procesados'][] = $idPartida;
+            }
         
+        }
     }
 
-    public function getAll(){
-        $presupuestos = Presupuesto::orderBy('id','desc')->paginate(20);
+    public function getAll(Request $request){
+        $id = $request->id;
+        $presupuestos = Presupuesto::where('id_fideicomiso', $id)->orderBy('id','desc')->paginate(20);
         return $presupuestos;
     }
 
@@ -91,6 +114,7 @@ class PresupuestosController extends Controller
         }
 
         $presupuesto = Presupuesto::create([
+            'id_fideicomiso'=> $request->id_fideicomiso,
             'serie'         => $request->serie,
             'periodo'       => $request->periodo ?? '2021-2027',
             'estatus'       => 'aprobado',
@@ -132,6 +156,7 @@ class PresupuestosController extends Controller
         $originalValues = $presupuesto->getOriginal();
 
         $presupuesto->update([
+            'serie'         => $request->serie,
             'periodo'       => $request->periodo,
             'year'          => $request->year,
             'id_municipio'  => $request->id_municipio
@@ -246,6 +271,7 @@ class PresupuestosController extends Controller
 
         $registros = PresupuestoCI::with('partida', 'beneficiario')->where('id_presupuesto', $request->id)->orderBy('id','DESC')->get();
         // $registros = PresupuestoPartida::with('partida')->where('id_presupuesto', 1)->get();
+        
         $estructuraFinal=[];
         foreach ($registros as $registro) {
 
@@ -255,7 +281,7 @@ class PresupuestosController extends Controller
 
             self::agregarPartidaPorJerarquia($estructuraFinal, $jerarquia, $registro->toArray());
         }
-
+        
         $data=[];
         $this->recorrerJerarquia($estructuraFinal, 3, $data);
         return $estructuraFinal;
@@ -395,13 +421,13 @@ class PresupuestosController extends Controller
 
     //PRESUPUESTO CARTA INSTRUCCION
     public function createPresupuestoCI(Request $request){
-        $exists = PresupuestoCi::where('id_partida', $request->id_partida)
-        ->where('id_beneficiario', $request->id_beneficiario)->where('id_presupuesto', $request->id_presupuesto)
-        ->exists();
+        // $exists = PresupuestoCi::where('id_partida', $request->id_partida)
+        // ->where('id_beneficiario', $request->id_beneficiario)->where('id_presupuesto', $request->id_presupuesto)
+        // ->exists();
 
-        if($exists){
-            abort(404, 'Ya existe una CI con ese beneficiario y esa partida.');
-        }
+        // if($exists){
+        //     abort(404, 'Ya existe una CI con ese beneficiario y esa partida.');
+        // }
 
         $fecha = Carbon::parse($request->fecha)->format('Y');
         $year = Carbon::parse($fecha)->format('Y');
@@ -465,6 +491,41 @@ class PresupuestosController extends Controller
             ['mes'=>'noviembre', 'importe'=> "0.00"],
             ['mes'=>'diciembre', 'importe'=> "0.00"],
         ];
+    }
+    //Funciones Clonar
+    public function cloneCI(Request $request){
+        $ci_id = $request->id;
+        $ci = PresupuestoCI::with('presu')->findOrFail($ci_id);
+        $presu = $ci->presu;
+        $fecha = Carbon::parse($presu->fecha)->format('Y');
+        $year = Carbon::parse($fecha)->format('Y');
+        $cartas = PresupuestoCI::withTrashed()->whereYear('fecha', $year)->get();
+        $ci_id = count($cartas) + 1;
+        
+        $pci = PresupuestoCI::create([
+            'id_presupuesto'    => $ci->id_presupuesto,
+            'id_partida'        => $ci->id_partida,
+            'ci'                => $ci_id,
+            'id_beneficiario'   => $ci->id_beneficiario,
+            'id_municipio'      => $ci->id_municipio,
+            'presupuestado'     => 0,
+            'importe'           => 0,
+            'importe_meses'     => $this->getMonthsValue(),
+            'concepto'          => 'concepto',
+            // 'observaciones'     => $request->observaciones,
+            'fecha'             => $presu->fecha,
+            'creado_por'        => $request->creado_por,
+            // 'actualizado_por'   => $request->actualizado_por,
+        ]);
+
+        // Bitacora
+        $bitacora = new Bitacora();
+        $bitacora->usuario = $request->creado_por;
+        $bitacora->descripcion = 
+        'Se agrego el CI con la partida '.$pci->partida->nombre .', y beneficiario '. $pci->beneficiario->nombre .' (clon)';
+        $pci->presu->bitacora()->save($bitacora);
+
+        
     }
 
     public function getExcelCI(Request $request){

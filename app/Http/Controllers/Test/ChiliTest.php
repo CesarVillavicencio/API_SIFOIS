@@ -19,10 +19,14 @@ use App\Models\UserRights;
 class ChiliTest {
 
     public static function test(): mixed {
-        $user = 'CVILLAVICENCIO';
-        $rights  = UserRights::where('usuario', $user)->get()->groupBy('modulo');
-        return $rights;
-
+        // dd(PresupuestoCI::all());
+        // $ci_id = $request->id;
+       $presupuesto = Presupuesto::with('presupuestoCI')->findOrFail(5);
+     
+       foreach ($presupuesto->presupuestoCI as $key => $ci) {
+            dd($ci->id_partida, $ci->presupuestadoEnPartida);
+       }
+       return 'hola';
     }
 
     public static function createRights($user){

@@ -13,7 +13,7 @@ class Presupuesto extends Model
     use HasFactory, SoftDeletes;
     
     protected $table = 'presupuestos';
-    protected $fillable = ['periodo', 'year', 'id_municipio', 'creado_por', 'actualizado_por', 'serie', 'fecha'];
+    protected $fillable = ['id_fideicomiso', 'periodo', 'year', 'id_municipio', 'creado_por', 'actualizado_por', 'serie', 'fecha'];
 
     protected $casts = [
         'id_municipio' => 'array',

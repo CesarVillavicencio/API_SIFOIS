@@ -17,6 +17,9 @@ class PresupuestoCI extends Model
         'importe_meses' => 'array',
     ];
 
+    
+    protected $appends = ['presupuestadoEnPartida']; 
+
     public function presu()
     {
         return $this->belongsTo(Presupuesto::class, 'id_presupuesto');
@@ -34,6 +37,9 @@ class PresupuestoCI extends Model
 
     public function getPresupuestadoEnPartidaAttribute()
     {
+        $pp = PresupuestoPartida::where('id_presupuesto',$this->id_presupuesto)->where('id_partida',$this->id_partida)->first();
+
+        return $pp->presupuesto;
         // return $this->;
     }
 }
