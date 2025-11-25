@@ -21,6 +21,8 @@ class ChiliTest {
     public static function test(): mixed {
         // dd(PresupuestoCI::all());
         // $ci_id = $request->id;
+        $latest  =  PresupuestoCI::withTrashed()->latest('ci')->whereYear('fecha', '2025')->select('ci')->first();
+        dd($latest->ci + 1);
        $presupuesto = Presupuesto::with('presupuestoCI')->findOrFail(5);
      
        foreach ($presupuesto->presupuestoCI as $key => $ci) {

@@ -455,8 +455,9 @@ class PresupuestosController extends Controller
 
         $fecha = Carbon::parse($request->fecha)->format('Y');
         $year = Carbon::parse($fecha)->format('Y');
-        $cartas = PresupuestoCI::withTrashed()->whereYear('fecha', $year)->get();
-        $ci_id = count($cartas) + 1;
+        $latest  = PresupuestoCI::withTrashed()->latest('ci')->whereYear('fecha', $year)->select('ci')->first();
+
+        $ci_id = $latest->ci + 1;
         
         $pci = PresupuestoCI::create([
             'id_presupuesto'    => $request->id_presupuesto,
