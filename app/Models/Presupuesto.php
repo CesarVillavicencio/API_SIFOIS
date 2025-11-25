@@ -34,7 +34,7 @@ class Presupuesto extends Model
     }
 
     public function getPresupuesto(){
-        $data = PresupuestoPartida::where('id_presupuesto', $this->id)->get();
+        $data = PresupuestoPartida::where('id_presupuesto', $this->id)->get()->unique('id_partida');
         return $data->sum('presupuesto');
     }
 

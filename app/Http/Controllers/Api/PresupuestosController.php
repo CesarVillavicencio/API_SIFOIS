@@ -319,12 +319,14 @@ class PresupuestosController extends Controller
 
         //Obtener suma de lo ejercido
         $pcis = PresupuestoCI::where('id_presupuesto', $request->id_presupuesto)->where('id', '!=', $request->id)->get();
-        
+       
         $sumaDeOtrosCI = 0;
-        foreach ($pcis as $key => $pci) {            
-            foreach ($pci->importe_meses as $key => $value) {
+        
+        foreach ($pcis as $key => $pci_) {            
+            foreach ($pci_->importe_meses as $key => $value) {
                 $sumaDeOtrosCI += $value['importe'];
             }
+            
         }
 
         $pci = PresupuestoCI::with('partida')->findOrFail($request->id);
@@ -336,18 +338,30 @@ class PresupuestosController extends Controller
         }
 
         $importeTotal = $importe + $sumaDeOtrosCI;
-
         // checar si el importe excede lo presupuestado en general:
         if((float) $importeTotal > (float) $presupuesto->presupuestado){
             abort(404, 'Excede el importe. <br> disponible: ' .Number::currency($disponible) .'. <br> total de importe: ' .Number::currency($importe));
         }
         
         // checar si el importe excede lo presupuestado en la partida:
-        if($importe > $pci->presupuestadoEnPartida ){
-            abort(404, 'Excede el importe presupuestado en la partida '.$pci->partida->nombre.' <br> Presupuestado: ' . Number::currency($pci->presupuestadoEnPartida) .'<br> total de importe: ' .Number::currency($importe));
+        $pcis_ = PresupuestoCI::where('id_presupuesto', $request->id_presupuesto)
+        ->where('id_partida', $request->id_partida)
+        ->where('id', '!=', $request->id)
+        ->get();
+
+        $sumaDeOtrosCIXPartidas=0;
+        foreach ($pcis_ as $key => $pci_) { 
+            
+            foreach ($pci_->importe_meses as $key => $value) {
+                $sumaDeOtrosCIXPartidas += $value['importe'];
+            }
+        }
+        
+        if(($importe + $sumaDeOtrosCIXPartidas) > $pci->presupuestadoEnPartida ){
+            abort(404, 'Excede el importe presupuestado en la partida '.$pci->partida->nombre.'. <br> Presupuestado: ' . Number::currency($pci->presupuestadoEnPartida) .'<br> Misma partida con otros beneficiarios: ' .Number::currency($sumaDeOtrosCIXPartidas). '<br> Total de importe: ' .Number::currency($importe)  );
         }
 
-        $pci->update($request->all());
+        $pci->update($request->only(['importe_meses']));
 
         $pci->importe = $importe;
         $pci->save();
