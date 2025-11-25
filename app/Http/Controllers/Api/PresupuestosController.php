@@ -18,6 +18,7 @@ use App\Models\PresupuestoCI;
 use App\Models\Bitacora;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Number;
 
 class PresupuestosController extends Controller
 {
@@ -308,15 +309,17 @@ class PresupuestosController extends Controller
     public function updateImporteMeses(Request $request){
         $presupuesto = Presupuesto::findOrFail($request->id_presupuesto);
         $disponible = $presupuesto->presupuestado - $presupuesto->ejercido;
-        
+   
         //Checar que no venga un con valor negativo
         foreach ($request->importe_meses as $key => $value) {
            if($value['importe'] < 0) {
                 abort(404, 'No acepta numeros negativos');
            }
         }
+
         //Obtener suma de lo ejercido
         $pcis = PresupuestoCI::where('id_presupuesto', $request->id_presupuesto)->where('id', '!=', $request->id)->get();
+        
         $sumaDeOtrosCI = 0;
         foreach ($pcis as $key => $pci) {            
             foreach ($pci->importe_meses as $key => $value) {
@@ -324,7 +327,8 @@ class PresupuestosController extends Controller
             }
         }
 
-        $pci = PresupuestoCI::findOrFail($request->id);
+        $pci = PresupuestoCI::with('partida')->findOrFail($request->id);
+     
         $oldValues = $pci->importe_meses;
         $importe = 0;
         foreach ($request->importe_meses as $key => $value) {
@@ -333,10 +337,16 @@ class PresupuestosController extends Controller
 
         $importeTotal = $importe + $sumaDeOtrosCI;
 
-        // return ['importe'=> $importe, 'disponible' => $disponible, 'presupuestado'=> $presupuesto->presupuestado];
+        // checar si el importe excede lo presupuestado en general:
         if((float) $importeTotal > (float) $presupuesto->presupuestado){
-            abort(404, 'Excede el importe. disponible: ' .$disponible .'. total de importe: ' .$importe);
+            abort(404, 'Excede el importe. <br> disponible: ' .Number::currency($disponible) .'. <br> total de importe: ' .Number::currency($importe));
         }
+        
+        // checar si el importe excede lo presupuestado en la partida:
+        if($importe > $pci->presupuestadoEnPartida ){
+            abort(404, 'Excede el importe presupuestado en la partida '.$pci->partida->nombre.' <br> Presupuestado: ' . Number::currency($pci->presupuestadoEnPartida) .'<br> total de importe: ' .Number::currency($importe));
+        }
+
         $pci->update($request->all());
 
         $pci->importe = $importe;
