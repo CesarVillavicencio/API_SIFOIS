@@ -99,7 +99,17 @@ class PresupuestosController extends Controller
 
     public function getAll(Request $request){
         $id = $request->id;
-        $presupuestos = Presupuesto::where('id_fideicomiso', $id)->orderBy('id','desc')->paginate(20);
+
+        $query = Presupuesto::query();
+        $query->where('id_fideicomiso', $id);
+
+        $query->when($request->busqueda != null, function($b) use ($request){
+            // PostgreSQL's LIKE operator is case-sensitive by default. To perform a case-insensitive search, use the ILIKE operator.
+            $b->where('serie', 'ILIKE', '%'.$request->busqueda .'%');
+        });
+
+        $presupuestos = $query->orderBy('id','desc')->paginate(20);
+
         return $presupuestos;
     }
 
