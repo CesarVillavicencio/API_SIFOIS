@@ -38,7 +38,7 @@ class PresupuestoCI extends Model
     public function getPresupuestadoEnPartidaAttribute()
     {
         $pp = PresupuestoPartida::where('id_presupuesto',$this->id_presupuesto)->where('id_partida',$this->id_partida)->first();
-        return $pp->presupuesto;
+        return $pp->presupuesto ?? 0;
         // return $this->;
     }
 }

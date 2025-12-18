@@ -19,16 +19,16 @@ use App\Models\UserRights;
 class ChiliTest {
 
     public static function test(): mixed {
-        // dd(PresupuestoCI::all());
-        // $ci_id = $request->id;
-        $latest  =  PresupuestoCI::withTrashed()->latest('ci')->whereYear('fecha', '2025')->select('ci')->first();
-        dd($latest->ci + 1);
-       $presupuesto = Presupuesto::with('presupuestoCI')->findOrFail(5);
-     
-       foreach ($presupuesto->presupuestoCI as $key => $ci) {
-            dd($ci->id_partida, $ci->presupuestadoEnPartida);
-       }
-       return 'hola';
+        $request_fecha = "2026-01-29";
+        $fecha = Carbon::parse($request_fecha)->format('Y');
+        $year = Carbon::parse($fecha)->format('Y');
+        dd($fecha);
+        $latest  = PresupuestoCI::withTrashed()->latest('ci')->whereYear('fecha', $year)->select('ci')->first();
+        
+        $ci_id = $latest->ci ?  $latest->ci + 1 : 1;
+
+        dd($ci_id);
+        return 'hola';
     }
 
     public static function createRights($user){

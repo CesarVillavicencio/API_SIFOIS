@@ -462,12 +462,11 @@ class PresupuestosController extends Controller
         // if($exists){
         //     abort(404, 'Ya existe una CI con ese beneficiario y esa partida.');
         // }
-
-        $fecha = Carbon::parse($request->fecha)->format('Y');
-        $year = Carbon::parse($fecha)->format('Y');
+        
+        $year = Carbon::parse($request->fecha)->format('Y');
         $latest  = PresupuestoCI::withTrashed()->latest('ci')->whereYear('fecha', $year)->select('ci')->first();
-
-        $ci_id = $latest->ci + 1;
+        
+        $ci_id = $latest ?  $latest->ci + 1 : 1;
         
         $pci = PresupuestoCI::create([
             'id_presupuesto'    => $request->id_presupuesto,
@@ -490,12 +489,15 @@ class PresupuestosController extends Controller
         $bitacora->usuario = $request->creado_por;
         $bitacora->descripcion = 
         'Se agrego el CI con la partida '.$pci->partida->nombre .', y beneficiario '. $pci->beneficiario->nombre;
+
         $pci->presu->bitacora()->save($bitacora);
 
     }
 
     public function updatePresupuestoCI(Request $request){
         $ci = PresupuestoCI::findOrFail($request->id);
+        
+        $ci->id_beneficiario = $request->id_beneficiario;
         $ci->fecha = $request->fecha;
         $ci->concepto = $request->concepto;
         $ci->observaciones = $request->observaciones;
@@ -530,19 +532,23 @@ class PresupuestosController extends Controller
     //Funciones Clonar
     public function cloneCI(Request $request){
         $ci_id = $request->id;
-        $ci = PresupuestoCI::with('presu')->findOrFail($ci_id);
-        $presu = $ci->presu;
+        $ci_a_clonar = PresupuestoCI::with('presu')->findOrFail($ci_id);
+        $presu = $ci_a_clonar->presu;
+
         $fecha = Carbon::parse($presu->fecha)->format('Y');
         $year = Carbon::parse($fecha)->format('Y');
-        $cartas = PresupuestoCI::withTrashed()->whereYear('fecha', $year)->get();
-        $ci_id = count($cartas) + 1;
+        //$cartas = PresupuestoCI::withTrashed()->whereYear('fecha', $year)->get();
+        //$ci_id = count($cartas) + 1;
+
+        $latest  = PresupuestoCI::withTrashed()->latest('ci')->whereYear('fecha', $year)->select('ci')->first();
+        $ci_id = $latest ? $latest->ci + 1 : 1;
         
         $pci = PresupuestoCI::create([
-            'id_presupuesto'    => $ci->id_presupuesto,
-            'id_partida'        => $ci->id_partida,
+            'id_presupuesto'    => $ci_a_clonar->id_presupuesto,
+            'id_partida'        => $ci_a_clonar->id_partida,
             'ci'                => $ci_id,
-            'id_beneficiario'   => $ci->id_beneficiario,
-            'id_municipio'      => $ci->id_municipio,
+            'id_beneficiario'   => $ci_a_clonar->id_beneficiario,
+            'id_municipio'      => $ci_a_clonar->id_municipio,
             'presupuestado'     => 0,
             'importe'           => 0,
             'importe_meses'     => $this->getMonthsValue(),
@@ -558,6 +564,7 @@ class PresupuestosController extends Controller
         $bitacora->usuario = $request->creado_por;
         $bitacora->descripcion = 
         'Se agrego el CI con la partida '.$pci->partida->nombre .', y beneficiario '. $pci->beneficiario->nombre .' (clon)';
+        
         $pci->presu->bitacora()->save($bitacora);
 
         
