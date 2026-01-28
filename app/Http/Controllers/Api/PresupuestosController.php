@@ -129,7 +129,7 @@ class PresupuestosController extends Controller
             'serie'         => $request->serie,
             'periodo'       => $request->periodo ?? '2021-2027',
             'estatus'       => 'aprobado',
-            'year'          => $request->year ?? '2025',
+            'year'          => $request->year ?? Carbon::now()->year,
             'id_municipio'  => $ids,
             'creado_por'    => $request->creado_por,
             'tipo_cambio'   => $request->tipo_cambio,
@@ -228,7 +228,30 @@ class PresupuestosController extends Controller
             'id_partida' => $request->id_partida,
             'presupuesto' => $request->presupuesto
         ]);
+        if($request->addToCI){
+            $exist = PresupuestoCI::where('id_presupuesto', $request->id_presupuesto)
+                    ->where('id_partida', $request->id_partida)
+                    ->exists();
+            if (!$exist) {return;}
 
+            $year = Carbon::parse($request->fecha ?? now() )->format('Y');
+            $latest  = PresupuestoCI::withTrashed()->latest('ci')->whereYear('fecha', $year)->select('ci')->first();
+        
+            $ci_id = $latest ?  $latest->ci + 1 : 1;
+
+             PresupuestoCI::create([
+                'id_presupuesto'    => $request->id_presupuesto,
+                'id_partida'        => $request->id_partida,
+                'ci'                => $ci_id,
+                'id_municipio'      => $pp->presu->id_municipio,
+                'presupuestado'     => 0,
+                'importe'           => 0,
+                'importe_meses'     => $this->getMonthsValue(),
+                'concepto'          => 'concepto',
+                'creado_por'        => $request->creado_por,
+                'fecha'             => now(),
+            ]);
+        }
         // Bitacora
         $partida = Partida::findOrFail($request->id_partida);
         $bitacora = new Bitacora();
@@ -488,7 +511,7 @@ class PresupuestosController extends Controller
         $bitacora = new Bitacora();
         $bitacora->usuario = $request->creado_por;
         $bitacora->descripcion = 
-        'Se agrego el CI con la partida '.$pci->partida->nombre .', y beneficiario '. $pci->beneficiario->nombre;
+        'Se agrego el CI con la partida '.$pci->partida->nombre .', y beneficiario '.( $pci->beneficiario?->nombre ?? 'SIN BENEFICIARIO');
 
         $pci->presu->bitacora()->save($bitacora);
 
@@ -498,6 +521,7 @@ class PresupuestosController extends Controller
         $ci = PresupuestoCI::findOrFail($request->id);
         
         $ci->id_beneficiario = $request->id_beneficiario;
+        $ci->id_partida = $request->id_partida;
         $ci->fecha = $request->fecha;
         $ci->concepto = $request->concepto;
         $ci->observaciones = $request->observaciones;
@@ -563,10 +587,11 @@ class PresupuestosController extends Controller
         $bitacora = new Bitacora();
         $bitacora->usuario = $request->creado_por;
         $bitacora->descripcion = 
-        'Se agrego el CI con la partida '.$pci->partida->nombre .', y beneficiario '. $pci->beneficiario->nombre .' (clon)';
+        'Se agrego el CI con la partida '.$pci->partida->nombre .', y beneficiario '. ($pci->beneficiario->nombre ?? 'sin Beneficiario') .' (clon)';
         
         $pci->presu->bitacora()->save($bitacora);
-
+        
+        return $pci;
         
     }
 
@@ -608,7 +633,7 @@ class PresupuestosController extends Controller
 
         // Data para beneficiarios
         $beneficiarios = $CIS->groupBy(function($val) {
-            return $val->beneficiario->fullName;
+            return $val->beneficiario->fullName ?? 'Sin Beneficiario';
         });
 
         $beneficiarios->each(function ($beneficiario, $key) use (&$labels, &$data_beneficiarios){

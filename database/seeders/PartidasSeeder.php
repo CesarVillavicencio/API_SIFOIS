@@ -31,64 +31,83 @@ class PartidasSeeder extends Seeder {
 
     // public function run() {
         Partida::create([
-            'nombre'    => 'PROMOCIÓN_Y_PUBLICIDAD_NACIONAL',
+            'nombre'    => 'PROMOCIÓN NACIONAL',
             'padre_id'  => null,
             'creado_por' => 'CVILLAVICENCIO'
         ]);
 
         Partida::create([
-            'nombre'    => 'PROMOCIÓN_Y_PUBLICIDAD_INTERNACIONAL',
+            'nombre'    => 'PROMOCIÓN INTERNACIONAL',
             'padre_id'  => null,
             'creado_por' => 'CVILLAVICENCIO'
         ]);
 
         Partida::create([
-            'nombre'    => 'MATERIALES_PROMOCIONALES',
+            'nombre'    => 'PROGRAMAS ESPECIALES',
             'padre_id'  => null,
             'creado_por' => 'CVILLAVICENCIO'
         ]);
 
-        Partida::create([
-            'nombre'    => 'Relaciones_públicas_y_medios',
+         Partida::create([
+            'nombre'    => 'PRESENCIAS BCS',
             'padre_id'  => 1,
             'creado_por' => 'CVILLAVICENCIO'
         ]);
 
         Partida::create([
-            'nombre'    => 'Diseño_de_materiales_y_desarrollo_de_contenido',
+            'nombre'    => 'APOYOS Y PATROCINIOS ',
             'padre_id'  => 1,
             'creado_por' => 'CVILLAVICENCIO'
         ]);
 
         Partida::create([
-            'nombre'    => 'Relaciones_públicas_y_medios',
+            'nombre'    => 'MATERIAL DE PROMOCION',
             'padre_id'  => 1,
             'creado_por' => 'CVILLAVICENCIO'
         ]);
 
-        Partida::create([
-            'nombre'    => 'Diseño_de_materiales_y_desarrollo_de_contenido',
-            'padre_id'  => 1,
-            'creado_por' => 'CVILLAVICENCIO'
-        ]);
+        // Partida::create([
+        //     'nombre'    => 'Tianguis Turistico',
+        //     'padre_id'  => 1,
+        //     'creado_por' => 'CVILLAVICENCIO'
+        // ]);
 
-        Partida::create([
-            'nombre'    => 'Relaciones_Públicas_y_Medios_Estados_Unidos',
-            'padre_id'  => 2,
-            'creado_por' => 'CVILLAVICENCIO'
-        ]);
+        // Partida::create([
+        //     'nombre'    => 'ATMEX',
+        //     'padre_id'  => 1,
+        //     'creado_por' => 'CVILLAVICENCIO'
+        // ]);
 
-        Partida::create([
-            'nombre'    => 'Relaciones_Públicas_y_Medios_Canadá',
-            'padre_id'  => 2,
-            'creado_por' => 'CVILLAVICENCIO'
-        ]);
+        // Partida::create([
+        //     'nombre'    => 'Apoyo a Fams Trips en Comondú',
+        //     'padre_id'  => 2,
+        //     'creado_por' => 'CVILLAVICENCIO'
+        // ]);
 
-        Partida::create([
-            'nombre'    => 'Materiales Promocionales y Colaterales',
-            'padre_id'  => 3,
-            'creado_por' => 'CVILLAVICENCIO'
-        ]);
+        // Partida::create([
+        //     'nombre'    => 'Apoyo a Fams Trips en Mulege',
+        //     'padre_id'  => 2,
+        //     'creado_por' => 'CVILLAVICENCIO'
+        // ]);
+
+
+        // Partida::create([
+        //     'nombre'    => 'Comondú',
+        //     'padre_id'  => 3,
+        //     'creado_por' => 'CVILLAVICENCIO'
+        // ]);
+
+        // Partida::create([
+        //     'nombre'    => 'Mulegé',
+        //     'padre_id'  => 2,
+        //     'creado_por' => 'CVILLAVICENCIO'
+        // ]);
+
+        // Partida::create([
+        //     'nombre'    => 'Materiales Promocionales y Colaterales',
+        //     'padre_id'  => 3,
+        //     'creado_por' => 'CVILLAVICENCIO'
+        // ]);
        
     }
 }

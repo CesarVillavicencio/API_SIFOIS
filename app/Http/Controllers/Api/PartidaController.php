@@ -37,7 +37,7 @@ class PartidaController extends Controller
 
     public function createPartida(Request $request){
         $partida = Partida::create([
-            'nombre' => $request->nombre,
+            'nombre' => $this->limpiarNombre($request->nombre),
             'padre_id' => $request->padre_id,
             'creado_por'  => $request->creado_por
         ]);
@@ -54,7 +54,7 @@ class PartidaController extends Controller
     public function updatePartida(Request $request){
         $partida = Partida::findOrFail($request->id);
         $old_nombre = $partida->nombre;
-        $partida->nombre            = $request->nombre;
+        $partida->nombre            = $this->limpiarNombre($request->nombre);
         $partida->padre_id          = $request->padre_id;
         $partida->actualizado_por   = $request->actualizado_por;
         $partida->save();
@@ -80,5 +80,32 @@ class PartidaController extends Controller
         $partida->bitacora()->save($bitacora);
 
         return $partida;
+    }
+
+    public function getAllPartidas(){
+        $partidas = Partida::with('hijos')->get();
+        return $partidas;
+    }
+
+    public function getPartidasInicial(){
+        $partidas = Partida::whereNull('padre_id')->orderBy('id','asc')->get();
+        return $partidas;
+    }
+
+    public function getPartidasByPadre(Request $request){
+        $id = $request->id;
+        $partidas = Partida::where('padre_id', $id)->get();
+        return $partidas;
+    }
+
+    private function limpiarNombre($nombre)
+    {
+        $nombre = str_replace('_', ' ', $nombre);
+
+        // Forzar UTF-8 correcto
+        $nombre = mb_convert_encoding($nombre, 'UTF-8', 'UTF-8');
+
+        // Convertir a mayúsculas respetando acentos
+        return mb_strtoupper($nombre, 'UTF-8');
     }
 }
