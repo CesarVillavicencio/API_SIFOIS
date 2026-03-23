@@ -340,87 +340,50 @@ class PresupuestosController extends Controller
     }
 
     public function updateImporteMeses(Request $request){
-        $presupuesto = Presupuesto::findOrFail($request->id_presupuesto);
-        $disponible = $presupuesto->presupuestado - $presupuesto->ejercido;
-   
-        //Checar que no venga un con valor negativo
-        foreach ($request->importe_meses as $key => $value) {
-           if($value['importe'] < 0) {
-                abort(404, 'No acepta numeros negativos');
-           }
-        }
-
-        //Obtener suma de lo ejercido
-        $pcis = PresupuestoCI::where('id_presupuesto', $request->id_presupuesto)->where('id', '!=', $request->id)->get();
-       
-        $sumaDeOtrosCI = 0;
-        
-        foreach ($pcis as $key => $pci_) {            
-            foreach ($pci_->importe_meses as $key => $value) {
-                $sumaDeOtrosCI += $value['importe'];
-            }
-            
-        }
-
         $pci = PresupuestoCI::with('partida')->findOrFail($request->id);
-     
         $oldValues = $pci->importe_meses;
+
+        // Calcular nuevo importe total del registro actual
         $importe = 0;
-        foreach ($request->importe_meses as $key => $value) {
+        foreach ($request->importe_meses as $value) {
             $importe += $value['importe'];
         }
 
-        $importeTotal = $importe + $sumaDeOtrosCI;
-        // checar si el importe excede lo presupuestado en general:
-        if((float) $importeTotal > (float) $presupuesto->presupuestado){
-            abort(404, 'Excede el importe. <br> disponible: ' .Number::currency($disponible) .'. <br> total de importe: ' .Number::currency($importe));
-        }
-        
-        // checar si el importe excede lo presupuestado en la partida:
-        $pcis_ = PresupuestoCI::where('id_presupuesto', $request->id_presupuesto)
-        ->where('id_partida', $request->id_partida)
-        ->where('id', '!=', $request->id)
-        ->get();
+        // Validar con la función reutilizable
+        $validacion = $this->validarImporte(
+            $request->id_presupuesto,
+            $request->id_partida,
+            $importe,
+            $request->id // excluye el registro actual
+        );
 
-        $sumaDeOtrosCIXPartidas=0;
-        foreach ($pcis_ as $key => $pci_) { 
-            
-            foreach ($pci_->importe_meses as $key => $value) {
-                $sumaDeOtrosCIXPartidas += $value['importe'];
-            }
-        }
-        
-        if(($importe + $sumaDeOtrosCIXPartidas) > $pci->presupuestadoEnPartida ){
-            abort(404, 'Excede el importe presupuestado en la partida '.$pci->partida->nombre.'. <br> Presupuestado: ' . Number::currency($pci->presupuestadoEnPartida) .'<br> Misma partida con otros beneficiarios: ' .Number::currency($sumaDeOtrosCIXPartidas). '<br> Total de importe: ' .Number::currency($importe)  );
+        if(!$validacion['valid']){
+            abort(404, $validacion['mensaje']);
         }
 
         $pci->update($request->only(['importe_meses']));
-
         $pci->importe = $importe;
         $pci->save();
 
         // Bitacora
         $cambios = [];
-
         foreach ($oldValues as $key => $item) {
-            $mes = $item['mes'];
-            $importeOriginal = $item['importe'];
             $importeActualizado = $pci->importe_meses[$key]['importe'];
 
-            if ($importeOriginal !== $importeActualizado) {
+            if ($item['importe'] !== $importeActualizado) {
                 $cambios[] = [
-                    'mes' => $mes,
-                    'importe_anterior' => $importeOriginal,
-                    'importe_nuevo' => $importeActualizado,
+                    'mes'               => $item['mes'],
+                    'importe_anterior'  => $item['importe'],
+                    'importe_nuevo'     => $importeActualizado,
                 ];
             }
         }
 
         $bitacora = new Bitacora();
         $bitacora->usuario = $request->actualizado_por;
-        $bitacora->descripcion = 
-        'Se han modificado los meses: '. json_encode($cambios);
+        $bitacora->descripcion = 'Se han modificado los meses: ' . json_encode($cambios);
         $pci->presu->bitacora()->save($bitacora);
+
         return $pci;
     }
 
@@ -477,14 +440,25 @@ class PresupuestosController extends Controller
     }
 
     //PRESUPUESTO CARTA INSTRUCCION
-    public function createPresupuestoCI(Request $request){
-        // $exists = PresupuestoCi::where('id_partida', $request->id_partida)
-        // ->where('id_beneficiario', $request->id_beneficiario)->where('id_presupuesto', $request->id_presupuesto)
-        // ->exists();
 
-        // if($exists){
-        //     abort(404, 'Ya existe una CI con ese beneficiario y esa partida.');
-        // }
+    /**
+     * Crea un nuevo PresupuestoCI con opción de asignar un importe inicial en un mes específico.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \App\Models\PresupuestoCI
+     */
+    public function createPresupuestoCI(Request $request){
+        $importe = $request->ingreso_mes ?? 0;
+
+        if($importe > 0){
+            $validacion = $this->validarImporte($request->id_presupuesto, $request->id_partida,$importe
+                // sin exclude_id porque el registro aún no existe
+            );
+
+            if(!$validacion['valid']){
+                abort(404, $validacion['mensaje']);
+            }
+        }
         
         $year = Carbon::parse($request->fecha)->format('Y');
         $latest  = PresupuestoCI::withTrashed()->latest('ci')->whereYear('fecha', $year)->select('ci')->first();
@@ -498,8 +472,8 @@ class PresupuestosController extends Controller
             'id_beneficiario'   => $request->id_beneficiario,
             'id_municipio'      => $request->id_municipio,
             'presupuestado'     => 0,
-            'importe'           => 0,
-            'importe_meses'     => $this->getMonthsValue(),
+            'importe'           => $importe,
+            'importe_meses'     => $this->getMonthsValue($request->mes, $importe),
             'concepto'          => $request->concepto,
             'observaciones'     => $request->observaciones,
             'fecha'             => $request->fecha,
@@ -513,6 +487,9 @@ class PresupuestosController extends Controller
         $bitacora->descripcion = 
         'Se agrego el CI con la partida '.$pci->partida->nombre .', y beneficiario '.( $pci->beneficiario?->nombre ?? 'SIN BENEFICIARIO');
 
+        if($importe > 0){
+            $bitacora->descripcion .= '. Importe inicial de ' . Number::currency($importe) . ' en el mes de ' . $request->mes;
+        }
         $pci->presu->bitacora()->save($bitacora);
 
     }
@@ -537,8 +514,8 @@ class PresupuestosController extends Controller
         return $presupuestoCI;
     }
 
-    public static function getMonthsValue(){
-        return [
+    public static function getMonthsValue($mesSeleccionado = null, $importe = 0){
+        $meses =  [
             ['mes'=>'enero', 'importe'=> "0.00"],
             ['mes'=>'febrero', 'importe'=> "0.00"],
             ['mes'=>'marzo', 'importe'=> "0.00"],
@@ -552,7 +529,19 @@ class PresupuestosController extends Controller
             ['mes'=>'noviembre', 'importe'=> "0.00"],
             ['mes'=>'diciembre', 'importe'=> "0.00"],
         ];
+
+        if ($mesSeleccionado) {
+            foreach ($meses as &$mes) {
+                if ($mes['mes'] === strtolower($mesSeleccionado)) {
+                    $mes['importe'] = number_format($importe, 2, '.', '');
+                    break;
+                }
+            }
+        }
+
+        return $meses;
     }
+
     //Funciones Clonar
     public function cloneCI(Request $request){
         $ci_id = $request->id;
@@ -684,6 +673,81 @@ class PresupuestosController extends Controller
         ];
 
         return ['data_partidas' => $data_partida, 'data_beneficiarios' => $data_beneficiarios, 'data_dona' => $data_dona];
-
     }   
+
+
+    /**
+     * Valida que el importe no exceda los límites del presupuesto general y por partida.
+     *
+     * @param int        $id_presupuesto  ID del presupuesto a validar
+     * @param int        $id_partida      ID de la partida a validar
+     * @param float      $importe         Importe a validar
+     * @param int|null   $exclude_id      ID del PresupuestoCI a excluir (usar en updates)
+     *
+     * @return array{valid: bool, mensaje: string|null}
+     */
+    private function validarImporte(int $id_presupuesto, int $id_partida, float $importe, ?int $exclude_id = null): array 
+    {
+        // Negativo
+        if($importe < 0){
+            return [
+                'valid' => false,
+                'mensaje' => 'No acepta numeros negativos.'
+            ];
+        }
+
+        $presupuesto = Presupuesto::findOrFail($id_presupuesto);
+
+        // Suma de otros CIs del mismo presupuesto
+        $sumaDeOtrosCI = 0;
+        PresupuestoCI::where('id_presupuesto', $id_presupuesto)
+            ->when($exclude_id, fn($q) => $q->where('id', '!=', $exclude_id))
+            ->get()
+            ->each(function($pci_) use (&$sumaDeOtrosCI) {
+                foreach ($pci_->importe_meses as $value) {
+                    $sumaDeOtrosCI += $value['importe'];
+                }
+            });
+
+        // Checar límite general
+        if((float)($sumaDeOtrosCI + $importe) > (float) $presupuesto->presupuestado){
+            $disponibleReal = $presupuesto->presupuestado - $sumaDeOtrosCI;
+            return [
+                'valid' => false,
+                'mensaje' => 'Excede el importe general del presupuesto.'
+                    . '<br> Disponible: '        . Number::currency($disponibleReal)
+                    . '<br> Importe ingresado: ' . Number::currency($importe)
+            ];
+        }
+
+        // Buscar el presupuesto de la partida en presupuesto_partidas
+        $presupuestoPartida = PresupuestoPartida::where('id_presupuesto', $id_presupuesto)
+            ->where('id_partida', $id_partida)
+            ->firstOrFail();
+
+        // Suma de otros CIs de la misma partida
+        $sumaDeOtrosCIXPartida = 0;
+        PresupuestoCI::where('id_presupuesto', $id_presupuesto)
+            ->where('id_partida', $id_partida)
+            ->when($exclude_id, fn($q) => $q->where('id', '!=', $exclude_id))
+            ->get()
+            ->each(function($pci_) use (&$sumaDeOtrosCIXPartida) {
+                foreach ($pci_->importe_meses as $value) {
+                    $sumaDeOtrosCIXPartida += $value['importe'];
+                }
+            });
+
+        if((float)($importe + $sumaDeOtrosCIXPartida) > (float) $presupuestoPartida->presupuesto){
+            $partida = Partida::findOrFail($id_partida);
+            return [
+                'valid' => false,
+                'mensaje' => 'Excede el importe presupuestado en la partida ' . $partida->nombre . '.'
+                    . '<br> Presupuestado: '     . Number::currency($presupuestoPartida->presupuesto)
+                    . '<br> Ocupado por otros: ' . Number::currency($sumaDeOtrosCIXPartida)
+                    . '<br> Tu importe: '        . Number::currency($importe)
+            ];
+        }
+
+        return ['valid' => true, 'mensaje' => null];
+    }
 };
