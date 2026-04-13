@@ -9,6 +9,7 @@ use App\Exports\PresupuestoExport;
 use App\Exports\ConceptosExport;
 use App\Exports\CIExport;
 use App\Exports\MultipleSheetExport;
+use App\Models\AjustePresupuesto;
 use App\Models\Presupuesto;
 use App\Models\Partida;
 use App\Models\PresupuestoPartida;
@@ -16,6 +17,7 @@ use App\Models\PresupuestoConcepto;
 use App\Models\Sepomex\Municipio;
 use App\Models\PresupuestoCI;
 use App\Models\Bitacora;
+use App\Models\MovimientoCI;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Number;
@@ -60,9 +62,11 @@ class PresupuestosController extends Controller
             // Inicializar el nodo padre si no existe o no está bien formado
             if (!isset($ref[$nombre]) || !is_array($ref[$nombre])) {
                 $ref[$nombre] = [
+                    'id' => uniqid(), //para que cada padre tenga su id y asi manejarlos independientemente en b-tables detail
                     'nombre' => $nombre,
                     'presupuesto' => 0,
                     'presupuestado' => 0,
+                    'ejercido' => 0,
                     'children' => [],
                 ];
             }
@@ -73,12 +77,15 @@ class PresupuestosController extends Controller
 
         // Agregamos la partida final (elemento)
         $ref[] = $elemento;
+
+        $ejercidoNuevo = $elemento['movimientos_sum_importe'] ?? 0;
         // Ahora actualizamos el presupuesto de cada padre sumando el presupuesto del nuevo elemento
         $presupuestoNuevo = $elemento['importe'] ?? 0;      
        
         foreach ($padres_referencias as &$padre) {            
             // Sumamos el presupuesto nuevo al presupuesto actual del padre
            $padre['presupuesto'] += $presupuestoNuevo;
+           $padre['ejercido'] += $ejercidoNuevo;
 
             // Inicializar lista de procesados para NO repetir partidas
             if (!isset($padre['procesados'])) {
@@ -218,7 +225,7 @@ class PresupuestosController extends Controller
 
     // Presupuesto Partida;
     public function getAllPP(Request $request){
-        $presupuesto_partida = PresupuestoPartida::with('partida.allPadres')->where('id_presupuesto', $request->id_presupuesto)->get();
+        $presupuesto_partida = PresupuestoPartida::conTotal()->with('partida.allPadres')->where('id_presupuesto', $request->id_presupuesto)->get();
         return $presupuesto_partida;
     }
 
@@ -228,11 +235,14 @@ class PresupuestosController extends Controller
             'id_partida' => $request->id_partida,
             'presupuesto' => $request->presupuesto
         ]);
+
         if($request->addToCI){
+            
             $exist = PresupuestoCI::where('id_presupuesto', $request->id_presupuesto)
                     ->where('id_partida', $request->id_partida)
                     ->exists();
-            if (!$exist) {return;}
+
+            if ($exist) {return;}
 
             $year = Carbon::parse($request->fecha ?? now() )->format('Y');
             $latest  = PresupuestoCI::withTrashed()->latest('ci')->whereYear('fecha', $year)->select('ci')->first();
@@ -300,11 +310,11 @@ class PresupuestosController extends Controller
     }
 
     public function getPresupuestoCI(Request $request){
-        // $ci = PresupuestoCI::with('partida', 'beneficiario')->where('id_presupuesto',$request->id)->get();
-        // return $ci;
 
-        $registros = PresupuestoCI::with('partida', 'beneficiario')->where('id_presupuesto', $request->id)->orderBy('id','DESC')->get();
-        // $registros = PresupuestoPartida::with('partida')->where('id_presupuesto', 1)->get();
+        $registros = PresupuestoCI::with('partida', 'beneficiario')
+            ->withSum('movimientos', 'importe') //agregamos la suma de los movimientos en la tabla ' presupuesto_ci_movimientos '
+            ->where('id_presupuesto', $request->id)
+            ->orderBy('id','DESC')->get();
         
         $estructuraFinal=[];
         foreach ($registros as $registro) {
@@ -686,10 +696,9 @@ class PresupuestosController extends Controller
      *
      * @return array{valid: bool, mensaje: string|null}
      */
-    private function validarImporte(int $id_presupuesto, int $id_partida, float $importe, ?int $exclude_id = null): array 
+    private function validarImporte(int $id_presupuesto, int $id_partida, float $importe, ?int $exclude_id = null): array
     {
-        // Negativo
-        if($importe < 0){
+        if ($importe < 0) {
             return [
                 'valid' => false,
                 'mensaje' => 'No acepta numeros negativos.'
@@ -698,20 +707,21 @@ class PresupuestosController extends Controller
 
         $presupuesto = Presupuesto::findOrFail($id_presupuesto);
 
-        // Suma de otros CIs del mismo presupuesto
-        $sumaDeOtrosCI = 0;
-        PresupuestoCI::where('id_presupuesto', $id_presupuesto)
-            ->when($exclude_id, fn($q) => $q->where('id', '!=', $exclude_id))
-            ->get()
-            ->each(function($pci_) use (&$sumaDeOtrosCI) {
-                foreach ($pci_->importe_meses as $value) {
-                    $sumaDeOtrosCI += $value['importe'];
-                }
-            });
+        /*
+        |----------------------------------------------------------
+        | SUMA TOTAL DE CI DEL PRESUPUESTO
+        |----------------------------------------------------------
+        */
 
-        // Checar límite general
-        if((float)($sumaDeOtrosCI + $importe) > (float) $presupuesto->presupuestado){
+        $sumaDeOtrosCI = MovimientoCI::join('presupuesto_ci', 'presupuesto_ci.id', '=', 'presupuesto_ci_movimientos.id_presupuesto_ci')
+            ->where('presupuesto_ci.id_presupuesto', $id_presupuesto)
+            ->when($exclude_id, fn($q) => $q->where('presupuesto_ci.id', '!=', $exclude_id))
+            ->sum('presupuesto_ci_movimientos.importe');
+
+        if (($sumaDeOtrosCI + $importe) > $presupuesto->presupuestado) {
+
             $disponibleReal = $presupuesto->presupuestado - $sumaDeOtrosCI;
+
             return [
                 'valid' => false,
                 'mensaje' => 'Excede el importe general del presupuesto.'
@@ -720,34 +730,76 @@ class PresupuestosController extends Controller
             ];
         }
 
-        // Buscar el presupuesto de la partida en presupuesto_partidas
-        $presupuestoPartida = PresupuestoPartida::where('id_presupuesto', $id_presupuesto)
+        /*
+        |----------------------------------------------------------
+        | PRESUPUESTO DE LA PARTIDA (CON AJUSTES)
+        |----------------------------------------------------------
+        */
+
+        $presupuestoPartida = PresupuestoPartida::conTotal()
+            ->where('id_presupuesto', $id_presupuesto)
             ->where('id_partida', $id_partida)
             ->firstOrFail();
 
-        // Suma de otros CIs de la misma partida
-        $sumaDeOtrosCIXPartida = 0;
-        PresupuestoCI::where('id_presupuesto', $id_presupuesto)
-            ->where('id_partida', $id_partida)
-            ->when($exclude_id, fn($q) => $q->where('id', '!=', $exclude_id))
-            ->get()
-            ->each(function($pci_) use (&$sumaDeOtrosCIXPartida) {
-                foreach ($pci_->importe_meses as $value) {
-                    $sumaDeOtrosCIXPartida += $value['importe'];
-                }
-            });
+        /*
+        |----------------------------------------------------------
+        | SUMA DE CI DE LA MISMA PARTIDA
+        |----------------------------------------------------------
+        */
 
-        if((float)($importe + $sumaDeOtrosCIXPartida) > (float) $presupuestoPartida->presupuesto){
+        $sumaDeOtrosCIXPartida = MovimientoCI::join('presupuesto_ci', 'presupuesto_ci.id', '=', 'presupuesto_ci_movimientos.id_presupuesto_ci')
+            ->where('presupuesto_ci.id_presupuesto', $id_presupuesto)
+            ->where('presupuesto_ci.id_partida', $id_partida)
+            ->when($exclude_id, fn($q) => $q->where('presupuesto_ci.id', '!=', $exclude_id))
+            ->sum('presupuesto_ci_movimientos.importe');
+
+        if (($importe + $sumaDeOtrosCIXPartida) > $presupuestoPartida->total_ajustado) {
+
             $partida = Partida::findOrFail($id_partida);
+
             return [
                 'valid' => false,
                 'mensaje' => 'Excede el importe presupuestado en la partida ' . $partida->nombre . '.'
-                    . '<br> Presupuestado: '     . Number::currency($presupuestoPartida->presupuesto)
+                    . '<br> Presupuestado: '     . Number::currency($presupuestoPartida->total_ajustado)
                     . '<br> Ocupado por otros: ' . Number::currency($sumaDeOtrosCIXPartida)
                     . '<br> Tu importe: '        . Number::currency($importe)
             ];
         }
 
         return ['valid' => true, 'mensaje' => null];
+    }
+
+    //Movimientos presupuesto CI
+    public function setMovimiento(Request $request){
+         $ci = PresupuestoCI::findOrFail($request->id_presupuesto_ci);
+
+        $validacion = $this->validarImporte(
+            $ci->id_presupuesto,
+            $ci->id_partida,
+            $request->importe
+        );
+
+        if(!$validacion['valid']){
+            abort(404, $validacion['mensaje']);
+        }
+
+        $mov = MovimientoCI::create($request->all());
+        return $mov;
+    }
+
+    public function sumaMovimientos(Request $request){
+        $importe = MovimientoCI::Where('id_presupuesto_ci', $request->id)->sum('importe');
+        return $importe;
+    }
+
+    public function getMovimientosByID(Request $request){
+        $id = $request->id;
+        $movimientos = MovimientoCI::where('id_presupuesto_ci', $id)->get();
+        return $movimientos;
+    }
+
+    public function setAjuste(Request $request){
+        $ajuste = AjustePresupuesto::create($request->all());
+        return $ajuste;
     }
 };

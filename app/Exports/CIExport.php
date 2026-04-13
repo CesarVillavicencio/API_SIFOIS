@@ -21,44 +21,34 @@ class CIExport implements FromArray, WithEvents, ShouldAutoSize
 
     protected $data;
     protected $filasConNivel;
+    protected $mapMeses;
     
     public function __construct(array $data)
     {
         $this->data = $data;
         $this->filasConNivel = [];
+        $this->mapMeses=[
+            'enero' => 1,
+            'febrero' => 2,
+            'marzo' => 3,
+            'abril' => 4,
+            'mayo' => 5,
+            'junio' => 6,
+            'julio' => 7,
+            'agosto' => 8,
+            'septiembre' => 9,
+            'octubre' => 10,
+            'noviembre' => 11,
+            'diciembre' => 12,
+        ];
         
     }
 
-    // /**
-    // * @return \Illuminate\Support\Collection
-    // */
-
-    // public function collection()
-    // {
-    //      return $this->reservas;
-    // }
-
-    
-
-    // public function headings(): array
-    // {
-    //     return array_keys($this->data[0]); // Encabezados a partir del primer elemento
-        
-    // }
-
     public function array():array
     {
-        // $data_array = [];
-        // foreach ($this->data as $key => $d) {
-        //     $data=[];
-        //     $data[] = $d['beneficiario']['nombre'] .' '. $d['beneficiario']['apellido'];
 
-        //     $data_array[] = $data; 
-        // }
-        // return $data_array;
         $rows = [];
         $rows[0] = [' '];
-        // $rows[1] = [' '];
         $rows[1] = [' ','BENEFICIARIO','ENERO','FEBRERO','MARZO','ABRIL','MAYO','JUNIO','JULIO','AGOSTO','SEPTIEMBRE','OCTUBRE','NOVIEMBRE','DICIEMBRE'];
         $rows[2] = [' '];
         $this->recorrerJerarquia($this->data, 2, $rows);
@@ -152,9 +142,18 @@ class CIExport implements FromArray, WithEvents, ShouldAutoSize
             $nombre = $nodo['nombre'] ?? $nodo['partida']['nombre'];
             $presupuesto = $nodo['presupuesto'] ?? ($nodo['importe'] ?? '');
             $beneficiario = isset($nodo['beneficiario']) ? $nodo['beneficiario']['nombre']  .' '. $nodo['beneficiario']['apellido']: ' ';
- 
+            
+            $meses = array_fill(1, 12, 0);
+
+            foreach ($nodo['movimientos'] ?? [] as $mov) {
+                $mesNombre = strtolower($mov['mes']);
+
+                $mesNumero = $this->mapMeses[$mesNombre];
+                $meses[$mesNumero] += $mov['importe'];
+            }
+            
             $rows[] = [$nombre, $beneficiario,
-            $nodo['importe_meses'][0]['importe'] ?? 0 , $nodo['importe_meses'][1]['importe'] ?? 0, $nodo['importe_meses'][2]['importe'] ?? 0, $nodo['importe_meses'][3]['importe'] ?? ' ', $nodo['importe_meses'][4]['importe'] ?? 0 , $nodo['importe_meses'][5]['importe'] ?? 0, $nodo['importe_meses'][6]['importe'] ?? 0, $nodo['importe_meses'][7]['importe'] ?? 0, $nodo['importe_meses'][8]['importe'] ?? 0, $nodo['importe_meses'][9]['importe'] ?? 0, $nodo['importe_meses'][10]['importe'] ?? 0, $nodo['importe_meses'][11]['importe'] ?? 0, 
+            $meses[1], $meses[2], $meses[3], $meses[4], $meses[5], $meses[6], $meses[7], $meses[8], $meses[9], $meses[10], $meses[11], $meses[12],
             $presupuesto];
 
             // Guardamos la fila actual (última añadida) y nivel

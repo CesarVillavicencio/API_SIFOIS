@@ -134,9 +134,11 @@ class PresupuestoExport implements FromArray, WithEvents, ShouldAutoSize, WithTi
 
     protected function recorrerJerarquia($estructura, $nivel, &$rows)
     {
+        // abort(response()->json($estructura, 500));
         foreach ($estructura as $nodo) {
+            // abort(response()->json($nodo, 500));
             $nombre = $nodo['nombre'] ?? $nodo['partida']['nombre'];
-            $presupuesto = $nodo['presupuesto'] ?? ($nodo['presupuesto_total'] ?? '');
+            $presupuesto = $nodo['total_ajustado'] ?? ($nodo['presupuesto'] ?? '');
 
             $rows[] = [$nombre, $presupuesto];
 

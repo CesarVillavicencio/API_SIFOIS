@@ -48,7 +48,7 @@ class MultipleSheetExport implements WithMultipleSheets
     }
     public function getPresupuestosData($id){
         $presupuesto = Presupuesto::findOrFail($id);       
-        $registros = PresupuestoPartida::with('partida')->where('id_presupuesto', $id)->get();
+        $registros = PresupuestoPartida::conTotal()->with('partida')->where('id_presupuesto', $id)->get();
 
         $estructuraFinal=[];
         foreach ($registros as $registro) {
@@ -92,7 +92,7 @@ class MultipleSheetExport implements WithMultipleSheets
         // Agregamos la partida final (elemento)
         $ref[] = $elemento;
         // Ahora actualizamos el presupuesto de cada padre sumando el presupuesto del nuevo elemento
-        $presupuestoNuevo = $elemento['presupuesto'] ?? 0;
+        $presupuestoNuevo = $elemento['total_ajustado'] ?? 0;
         foreach ($padres_referencias as &$padre) {
             // Sumamos el presupuesto nuevo al presupuesto actual del padre
             $padre['presupuesto'] += $presupuestoNuevo;
@@ -100,7 +100,7 @@ class MultipleSheetExport implements WithMultipleSheets
     }
 
     public function getCISData($id_presupuesto){
-        $registros = PresupuestoCI::with('partida', 'beneficiario')->where('id_presupuesto', $id_presupuesto)->get();
+        $registros = PresupuestoCI::with('movimientos','partida', 'beneficiario')->where('id_presupuesto', $id_presupuesto)->get();
       
         $estructuraFinal=[];
         foreach ($registros as $registro) {
@@ -121,7 +121,7 @@ class MultipleSheetExport implements WithMultipleSheets
     {
         foreach ($estructura as $nodo) {
             $nombre = $nodo['nombre'] ?? $nodo['partida']['nombre'];
-            $presupuesto = $nodo['presupuesto'] ?? ($nodo['presupuesto_total'] ?? '');
+            $presupuesto = $nodo['total_ajustado'] ?? ($nodo['presupuesto'] ?? '');
 
             $rows[] = [$nombre, $presupuesto];
 

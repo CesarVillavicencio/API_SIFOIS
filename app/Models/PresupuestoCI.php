@@ -37,8 +37,23 @@ class PresupuestoCI extends Model
 
     public function getPresupuestadoEnPartidaAttribute()
     {
-        $pp = PresupuestoPartida::where('id_presupuesto',$this->id_presupuesto)->where('id_partida',$this->id_partida)->first();
-        return $pp->presupuesto ?? 0;
-        // return $this->;
+        static $cache = [];
+        $key = $this->id_presupuesto.'-'.$this->id_partida;
+
+        if (!isset($cache[$key])) {
+
+            $pp = PresupuestoPartida::conTotal()
+                ->where('id_presupuesto', $this->id_presupuesto)
+                ->where('id_partida', $this->id_partida)
+                ->first();
+
+            $cache[$key] = $pp->total_ajustado ?? 0;
+        }
+
+        return $cache[$key];
+    }
+
+    public function movimientos(){
+        return $this->hasMany(MovimientoCI::class, 'id_presupuesto_ci');
     }
 }

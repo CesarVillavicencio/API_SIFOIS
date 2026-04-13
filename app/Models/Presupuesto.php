@@ -34,13 +34,24 @@ class Presupuesto extends Model
     }
 
     public function getPresupuesto(){
-        $data = PresupuestoPartida::where('id_presupuesto', $this->id)->get()->unique('id_partida');
-        return $data->sum('presupuesto');
+        // $data = PresupuestoPartida::where('id_presupuesto', $this->id)->get()->unique('id_partida');
+
+        $data = PresupuestoPartida::conTotal()
+        ->where('id_presupuesto', $this->id)
+        ->get();
+        // ->unique('id_partida');
+
+        return $data->sum('total_ajustado');
     }
 
     public function getEjercido(){
-        $data = PresupuestoCI::where('id_presupuesto', $this->id)->get();
-        return $data->sum('importe');
+        // $data = PresupuestoCI::where('id_presupuesto', $this->id)->get();
+        // return $data->sum('importe');
+
+        //nuevo ->
+        return MovimientoCI::whereHas('presupuestoCI', function ($q) {
+            $q->where('id_presupuesto', $this->id);
+        })->sum('importe');
     }
 
     public function getEjercidoAttribute()

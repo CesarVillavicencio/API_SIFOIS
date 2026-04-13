@@ -39,3 +39,7 @@ Route::get('getMultipleExcel',              [PresupuestosController::class, 'get
 
 //Reportes
 Route::get('getDataForPresupuestoReportes', [PresupuestosController::class, 'getDataForPresupuestoReportes'])->name('presupuestos.getDataForPresupuestoReportes');
+
+//movimientoCI
+Route::post('setMovimientoCI',          [PresupuestosController::class, 'setMovimiento'])->name('presupuestos.setMovimiento');
+Route::get('getMovimientosByID',        [PresupuestosController::class, 'getMovimientosByID'])->name('presupuestos.getMovimientosByID');
