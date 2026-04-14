@@ -802,4 +802,11 @@ class PresupuestosController extends Controller
         $ajuste = AjustePresupuesto::create($request->all());
         return $ajuste;
     }
+
+    public function getAjustes(Request $request){
+        $id = $request->id;
+        $ajustes = AjustePresupuesto::where('id_presupuesto_partida', $id)->get();
+
+        return $ajustes;
+    }
 };

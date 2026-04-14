@@ -9,3 +9,4 @@ Route::post('updatePP',   [PresupuestosController::class, 'updatePP'])->name('Pr
 Route::post('deletePP',   [PresupuestosController::class, 'deletePP'])->name('PresupuestoPartida.deletePP');
 
 Route::post('setAjuste',   [PresupuestosController::class, 'setAjuste'])->name('PresupuestoPartida.setAjuste');
+Route::get('getAjustes',      [PresupuestosController::class, 'getAjustes'])->name('PresupuestoPartida.getAjustes');
